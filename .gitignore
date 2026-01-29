@@ -1,0 +1,7 @@
+# Ignore build files and cmake cache
+cmake-build*
+bin/
+
+# Ignore IDE config folder
+.idea/
+.vscode/
