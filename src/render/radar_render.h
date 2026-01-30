@@ -35,6 +35,8 @@ namespace RenderPlugin {
         void drawArea(HDC hDC, const RenderData &data);
 
         void drawText(HDC hDC, const RenderData &data);
+
+
     };
 }
 

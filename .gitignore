@@ -1,6 +1,7 @@
 # Ignore build files and cmake cache
 cmake-build*
 bin/
+vcpkg_installed/
 
 # Ignore IDE config folder
 .idea/

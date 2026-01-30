@@ -1,0 +1,12 @@
+{
+  "name": "euroscope-render-plugin",
+  "version-string": "1.0.0",
+  "description": "EuroScope Render Plugin",
+  "dependencies": [
+    {
+      "name": "yaml-cpp",
+      "version>=": "0.8.0",
+      "platform": "x86 & windows & static"
+    }
+  ]
+}
