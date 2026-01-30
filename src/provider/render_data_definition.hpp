@@ -7,8 +7,9 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <windef.h>
-#include <wingdi.h>
+#include <windows.h>
+#include <gdiplus.h>
+#include "EuroScopePlugIn.h"
 
 namespace RenderPlugin {
     struct Coordinate {
@@ -18,10 +19,17 @@ namespace RenderPlugin {
         Coordinate() = default;
 
         Coordinate(double longitude, double latitude) : mLongitude(longitude), mLatitude(latitude) {}
+
+        [[nodiscard]] EuroScopePlugIn::CPosition toPosition() const {
+            EuroScopePlugIn::CPosition pos;
+            pos.m_Latitude = mLatitude;
+            pos.m_Longitude = mLongitude;
+            return pos;
+        }
     };
 
     using Coordinates = std::vector<Coordinate>;
-    using ColorMap = std::map<std::string, COLORREF>;
+    using ColorMap = std::map<std::string, Gdiplus::Color>;
 
     enum class RenderType {
         LINE,
@@ -60,10 +68,10 @@ namespace RenderPlugin {
         RenderType mType{RenderType::AREA};
         Coordinates mCoordinates{};
         std::string mRawFill{}; // color which will be filled in the area, only used in area type
-        COLORREF mFill{};
+        Gdiplus::Color mFill{};
         std::string mRawColor{}; // line color or text color
-        COLORREF mColor{};
-        std::string mText{}; // text content
+        Gdiplus::Color mColor{};
+        std::wstring mText{}; // text content
         int mFontSize{}; // text font size
 
         RenderData() = default;

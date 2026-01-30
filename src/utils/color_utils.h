@@ -4,14 +4,14 @@
 #ifndef RENDERPLUGIN_COLOR_UTILS_H
 #define RENDERPLUGIN_COLOR_UTILS_H
 
+#include <windows.h>
+#include <gdiplus.h>
 #include <string>
-#include <windef.h>
-#include <wingdi.h>
 
 namespace RenderPlugin {
-    constexpr COLORREF DEFAULT_COLOR = RGB(0, 0, 0);
+    inline Gdiplus::Color DEFAULT_COLOR = Gdiplus::Color();
 
-    COLORREF parseColor(const std::string &colorStr);
+    Gdiplus::Color parseColor(const std::string &colorStr);
 }
 
 #endif

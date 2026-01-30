@@ -3,8 +3,10 @@
 
 #include "color_utils.h"
 
+using namespace Gdiplus;
+
 namespace RenderPlugin {
-    COLORREF parseColor(const std::string &colorStr) {
+    Color parseColor(const std::string &colorStr) {
         if (colorStr.empty() || colorStr[0] != '#') {
             return DEFAULT_COLOR;
         }
@@ -20,10 +22,10 @@ namespace RenderPlugin {
         }
 
         try {
-            int r = std::stoi(hex.substr(0, 2), nullptr, 16);
-            int g = std::stoi(hex.substr(2, 2), nullptr, 16);
-            int b = std::stoi(hex.substr(4, 2), nullptr, 16);
-            return RGB(r, g, b);
+            BYTE r = std::stoi(hex.substr(0, 2), nullptr, 16);
+            BYTE g = std::stoi(hex.substr(2, 2), nullptr, 16);
+            BYTE b = std::stoi(hex.substr(4, 2), nullptr, 16);
+            return Color(r, g, b);
         } catch (...) {
             return DEFAULT_COLOR;
         }

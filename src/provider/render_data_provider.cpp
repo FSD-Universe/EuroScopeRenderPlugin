@@ -16,10 +16,7 @@ namespace RenderPlugin {
         }
     }
 
-    COLORREF RenderDataProvider::getColor(const std::string &name) {
-        if (!mIsLoaded) {
-            return DEFAULT_COLOR;
-        }
+    Gdiplus::Color RenderDataProvider::getColor(const std::string &name) {
         if (mColorMap->find(name) == mColorMap->end()) {
             return DEFAULT_COLOR;
         }
@@ -36,7 +33,7 @@ namespace RenderPlugin {
         mIsLoaded = false;
     }
 
-    COLORREF RenderDataProvider::processColorField(const std::string &rawColor) {
+    Gdiplus::Color RenderDataProvider::processColorField(const std::string &rawColor) {
         if (rawColor.empty()) {
             // if the color field is empty, we use the default color
             return DEFAULT_COLOR;

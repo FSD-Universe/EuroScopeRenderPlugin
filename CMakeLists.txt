@@ -8,15 +8,28 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_GENERATOR_PLATFORM "Win32")
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
+find_package(yaml-cpp)
+
 message("Build Type: ${CMAKE_BUILD_TYPE} ${CMAKE_CXX_FLAGS}")
 message("PROJECT_NAME: ${PROJECT_NAME}")
 message("PROJECT_VERSION: ${PROJECT_VERSION}")
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message("PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 
-include_directories(include src)
+include_directories(
+        include
+        src/plugin
+        src/provider
+        src/render
+        src/utils
+)
 link_directories("${PROJECT_SOURCE_DIR}/lib")
 
-add_library(${PROJECT_NAME} SHARED main.cpp)
+include(files.cmake)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE EuroScopePlugIn)
+#add_executable(${PROJECT_NAME} ${SOURCE_FILE})
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILE})
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE _X86_ WIN32 _WINDOWS)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE EuroScopePlugIn yaml-cpp::yaml-cpp gdiplus)

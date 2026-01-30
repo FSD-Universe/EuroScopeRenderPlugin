@@ -5,6 +5,7 @@
 #define RENDERPLUGIN_RENDER_DATA_YAML_PROVIDER_H
 
 #include "render_data_provider.h"
+#include "string_utils.h"
 #include <yaml-cpp/yaml.h>
 
 namespace RenderPlugin {
@@ -45,15 +46,15 @@ namespace YAML {
             node["coordinates"] = rhs.mCoordinates;
             // area type support fill (area fill color)
             if (!rhs.mRawFill.empty()) {
-                node["fill"] = rhs.mFill;
+                node["fill"] = rhs.mRawFill;
             }
             // line/area/text type support color (line color or text color)
             if (!rhs.mRawColor.empty()) {
-                node["color"] = rhs.mColor;
+                node["color"] = rhs.mRawColor;
             }
             // text type support text content
             if (!rhs.mText.empty()) {
-                node["text"] = rhs.mText;
+                node["text"] = RenderPlugin::WstringToUtf8(rhs.mText);
             }
             // text type support font size
             if (rhs.mFontSize > 0) {
@@ -75,7 +76,7 @@ namespace YAML {
                 rhs.mRawColor = node["color"].as<std::string>();
             }
             if (node["text"]) {
-                rhs.mText = node["text"].as<std::string>();
+                rhs.mText = RenderPlugin::Utf8ToWstring(node["text"].as<std::string>());
             }
             if (node["size"]) {
                 rhs.mFontSize = node["size"].as<int>();

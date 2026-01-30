@@ -6,11 +6,14 @@
 #include "radar_render.h"
 #include "render_data_provider.h"
 
+using namespace Gdiplus;
+
 namespace RenderPlugin {
     RadarRender::RadarRender(ProviderPtr dataProvider, fs::path configPath) : mDataProvider(std::move(dataProvider)),
                                                                               mConfigPath(std::move(configPath)),
                                                                               mIsLoaded(false) {
-        mIsLoaded = mDataProvider->loadData(configPath.string());
+        GdiplusStartup(&mGdiplusToken, &mGdiplusStartupInput, nullptr);
+        mIsLoaded = mDataProvider->loadData(mConfigPath);
     }
 
     RadarRender::~RadarRender() {
@@ -18,34 +21,12 @@ namespace RenderPlugin {
             mDataProvider->resetData();
             mDataProvider.reset();
             mIsLoaded = false;
+            GdiplusShutdown(mGdiplusToken);
         }
-    }
-
-    void RadarRender::drawLine(HDC hDC, const RenderData &data) {
-        if (data.mCoordinates.size() < 2) {
-            return;
-        }
-
-        std::vector<POINT> points;
-        for (const auto &coord: data.mCoordinates) {
-            EuroScopePlugIn::CPosition pos;
-            pos.m_Latitude = coord.mLatitude;
-            pos.m_Longitude = coord.mLongitude;
-            POINT pt = ConvertCoordFromPositionToPixel(pos);
-            points.push_back(pt);
-        }
-
-        HPEN hPen = CreatePen(PS_SOLID, 1, data.mColor);
-        HPEN hOldPen = (HPEN) SelectObject(hDC, hPen);
-
-        Polyline(hDC, points.data(), static_cast<int>(points.size()));
-
-        SelectObject(hDC, hOldPen);
-        DeleteObject(hPen);
     }
 
     void RadarRender::OnRefresh(HDC hDC, int Phase) {
-        if (!mIsLoaded || Phase != EuroScopePlugIn::REFRESH_PHASE_AFTER_TAGS) {
+        if (!mIsLoaded || Phase != EuroScopePlugIn::REFRESH_PHASE_BACK_BITMAP) {
             return;
         }
 
@@ -69,37 +50,43 @@ namespace RenderPlugin {
         }
     }
 
+    void RadarRender::drawLine(HDC hDC, const RenderData &data) {
+        if (data.mCoordinates.size() < 2) {
+            return;
+        }
+
+        std::vector<Point> points;
+        for (const auto &coord: data.mCoordinates) {
+            POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
+            points.emplace_back(pt.x, pt.y);
+        }
+
+        Graphics graphics(hDC);
+        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+        Pen pen(data.mColor, 1.0f);
+
+        graphics.DrawLines(&pen, points.data(), static_cast<int>(points.size()));
+    }
+
     void RadarRender::drawArea(HDC hDC, const RenderData &data) {
         if (data.mCoordinates.size() < 3) {
             return;
         }
 
-        std::vector<POINT> points;
+        std::vector<Point> points;
         for (const auto &coord: data.mCoordinates) {
-            EuroScopePlugIn::CPosition pos;
-            pos.m_Latitude = coord.mLatitude;
-            pos.m_Longitude = coord.mLongitude;
-            POINT pt = ConvertCoordFromPositionToPixel(pos);
-            points.push_back(pt);
+            POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
+            points.emplace_back(pt.x, pt.y);
         }
 
-        HBRUSH hBrush = CreateSolidBrush(data.mFill);
-        HBRUSH hOldBrush = (HBRUSH) SelectObject(hDC, hBrush);
+        Graphics graphics(hDC);
+        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+        Pen pen(data.mColor, 1.0f);
+        SolidBrush brush(data.mFill);
 
-        SetPolyFillMode(hDC, WINDING);
-        Polygon(hDC, points.data(), static_cast<int>(points.size()));
-
-        SelectObject(hDC, hOldBrush);
-        DeleteObject(hBrush);
-
+        graphics.FillPolygon(&brush, points.data(), static_cast<int>(points.size()));
         if (!data.mRawColor.empty()) {
-            HPEN hPen = CreatePen(PS_SOLID, 1, data.mColor);
-            HPEN hOldPen = (HPEN) SelectObject(hDC, hPen);
-
-            Polygon(hDC, points.data(), static_cast<int>(points.size()));
-
-            SelectObject(hDC, hOldPen);
-            DeleteObject(hPen);
+            graphics.DrawPolygon(&pen, points.data(), static_cast<int>(points.size()));
         }
     }
 
@@ -109,33 +96,14 @@ namespace RenderPlugin {
         }
 
         const auto &coord = data.mCoordinates[0];
-        EuroScopePlugIn::CPosition pos;
-        pos.m_Latitude = coord.mLatitude;
-        pos.m_Longitude = coord.mLongitude;
-        POINT pt = ConvertCoordFromPositionToPixel(pos);
+        POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
+        PointF point = PointF(pt.x, pt.y);
 
-        SetTextColor(hDC, data.mColor);
-        SetBkMode(hDC, TRANSPARENT);
-
-        int fontSize = data.mFontSize > 0 ? data.mFontSize : 12;
-        HFONT hFont = CreateFontW(
-                -fontSize, 0, 0, 0,
-                FW_NORMAL,
-                FALSE, FALSE, FALSE,
-                DEFAULT_CHARSET,
-                OUT_DEFAULT_PRECIS,
-                CLIP_DEFAULT_PRECIS,
-                DEFAULT_QUALITY,
-                DEFAULT_PITCH | FF_SWISS,
-                L"Arial"
-        );
-
-        HFONT hOldFont = (HFONT) SelectObject(hDC, hFont);
-
-        TextOut(hDC, pt.x, pt.y, data.mText.c_str(), static_cast<int>(data.mText.length()));
-
-        SelectObject(hDC, hOldFont);
-        DeleteObject(hFont);
+        Graphics graphics(hDC);
+        graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+        SolidBrush brush(data.mColor);
+        Font font(L"Euroscope", data.mFontSize, FontStyleRegular, UnitPixel);
+        graphics.DrawString(data.mText.c_str(), -1, &font, point,&brush);
     }
 
     bool RadarRender::OnCompileCommand(const char *sCommandLine) {
@@ -149,4 +117,7 @@ namespace RenderPlugin {
         return false;
     }
 
+    void RadarRender::OnAsrContentToBeClosed() {
+
+    }
 }

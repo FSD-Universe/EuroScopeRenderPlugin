@@ -408,7 +408,7 @@ namespace EuroScopePlugIn {
         //                    between 0 and point number - 1.
         //
         //  Return :
-        //      The coordinates of the point in the extracted route array.
+        //      The mCoordinates of the point in the extracted route array.
         //-----------------------------------------------------------------
 
 
@@ -605,7 +605,7 @@ namespace EuroScopePlugIn {
         CPosition GetPosition(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The lat/lon coordinates of the plane.
+        //      The lat/lon mCoordinates of the plane.
         //-----------------------------------------------------------------
 
 
@@ -768,7 +768,7 @@ namespace EuroScopePlugIn {
         const char *GetPlanType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The type of the flight plan: V or I.
+        //      The mType of the flight plan: V or I.
         //-----------------------------------------------------------------
 
 
@@ -777,14 +777,14 @@ namespace EuroScopePlugIn {
         bool SetPlanType(const char *sPlanType);
         //-----------------------------------------------------------------
         //	Parameters :
-        //		=>	sPlanType	- the type of the FP: V or I.
+        //		=>	sPlanType	- the mType of the FP: V or I.
         //
         //  Return :
         //      true    - if success
         //      false   - else
         //
         //	Description :
-        //		It changes the FP type.
+        //		It changes the FP mType.
         //-----------------------------------------------------------------
 
 
@@ -833,7 +833,7 @@ namespace EuroScopePlugIn {
         char GetAircraftType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The type of the aircraft.
+        //      The mType of the aircraft.
         //      Possible values are:
         //          ? - unknown
         //          L - landplane
@@ -859,7 +859,7 @@ namespace EuroScopePlugIn {
         char GetEngineType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The type of the engines of the aircraft.
+        //      The mType of the engines of the aircraft.
         //      Possible values are:
         //          ? - unknown
         //          P - piston
@@ -913,7 +913,7 @@ namespace EuroScopePlugIn {
         const char *GetManufacturerType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The type description of the aircraft by the manufacturer.
+        //      The mType description of the aircraft by the manufacturer.
         //-----------------------------------------------------------------
 
 
@@ -922,7 +922,7 @@ namespace EuroScopePlugIn {
         const char *GetAircraftFPType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The unencoded AC type as written to the FP.
+        //      The unencoded AC mType as written to the FP.
         //-----------------------------------------------------------------
 
 
@@ -1081,12 +1081,12 @@ namespace EuroScopePlugIn {
         char GetCommunicationType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The communications type.
+        //      The communications mType.
         //      Possible values are:
         //          ? - unknown
         //          V - voice
         //          R - receive voice only
-        //          T - text only
+        //          T - mText only
         //-----------------------------------------------------------------
 
 
@@ -1464,12 +1464,12 @@ namespace EuroScopePlugIn {
         char GetCommunicationType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      The communications type.
+        //      The communications mType.
         //      Possible values are:
         //          0 - unassigned
         //          V - voice
         //          R - receive voice only
-        //          T - text only
+        //          T - mText only
         //-----------------------------------------------------------------
 
 
@@ -1478,7 +1478,7 @@ namespace EuroScopePlugIn {
         bool SetCommunicationType(char CommunicationType);
         //-----------------------------------------------------------------
         //  Parameters :
-        //      =>  CommunicationType   - the new type (see the values above)
+        //      =>  CommunicationType   - the new mType (see the values above)
         //
         //  Return :
         //      true    - if success
@@ -1642,7 +1642,7 @@ namespace EuroScopePlugIn {
         //-----------------------------------------------------------------
         //  Parameters :
         //      =>  Index       - the index of the annotation (0-8).
-        //      =>  sAnnotation - the text itself
+        //      =>  sAnnotation - the mText itself
         //
         //  Return :
         //      true    - if success
@@ -1893,7 +1893,7 @@ namespace EuroScopePlugIn {
         //-----------------------------------------------------------------
         //  Return :
         //      A flag indicating if the pilot or a controller indicated
-        //      text communication.
+        //      mText communication.
         //-----------------------------------------------------------------
 
 
@@ -2217,7 +2217,7 @@ namespace EuroScopePlugIn {
         //      The position prediction array contains the position used
         //      by ES to determinate where the AC will be at a given time.
         //      Every element in the array contains data for the position
-        //      flown by the next minute. Therefore the size of the array is
+        //      flown by the next minute. Therefore the mFontSize of the array is
         //      always the remaining flight time in minutes.
         //
         //  Remark:
@@ -2681,7 +2681,7 @@ namespace EuroScopePlugIn {
         CPosition ConvertCoordFromPixelToPosition(POINT Pt);
         //-----------------------------------------------------------------
         //  Parameters :
-        //      =>  Pt      - a pixel coordinates
+        //      =>  Pt      - a pixel mCoordinates
         //
         //  Return :
         //      The value converted to Lat, Lon position.
@@ -2747,7 +2747,7 @@ namespace EuroScopePlugIn {
                              const char *sMessage);
         //-----------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the object (depends on the plugin)
+        //      =>  ObjectType  - the mType of the object (depends on the plugin)
         //      =>  sObjectId   - the object identifier (most commin is to set
         //                        the callisgn or similar)
         //      =>  Area        - the area covered by the screen object
@@ -3033,7 +3033,7 @@ namespace EuroScopePlugIn {
         //  Parameters :
         //      =>  FlightPlan  - the flight plan reference whose controller
         //                        assigned data is updated
-        //      =>  DataType    - the type of the data updated (CTR_DATA_TYPE ...)
+        //      =>  DataType    - the mType of the data updated (CTR_DATA_TYPE ...)
         //
         //  Description :
         //      All plugins must implement this function to handle the
@@ -3093,7 +3093,7 @@ namespace EuroScopePlugIn {
         };
         //------------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the screen object
+        //      =>  ObjectType  - the mType of the screen object
         //      =>  sObjectId   - the ID of the screen object
         //      =>  Pt          - the mouse position
         //      =>  Area        - the area originally registered for the
@@ -3115,7 +3115,7 @@ namespace EuroScopePlugIn {
         };
         //------------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the screen object
+        //      =>  ObjectType  - the mType of the screen object
         //      =>  sObjectId   - the ID of the screen object
         //      =>  Pt          - the mouse position
         //      =>  Area        - the area originally registered for the
@@ -3138,7 +3138,7 @@ namespace EuroScopePlugIn {
         };
         //------------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the screen object
+        //      =>  ObjectType  - the mType of the screen object
         //      =>  sObjectId   - the ID of the screen object
         //      =>  Pt          - the mouse position
         //      =>  Area        - the area originally registered for the
@@ -3161,7 +3161,7 @@ namespace EuroScopePlugIn {
         };
         //------------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the screen object
+        //      =>  ObjectType  - the mType of the screen object
         //      =>  sObjectId   - the ID of the screen object
         //      =>  Pt          - the mouse position
         //      =>  Area        - the area originally registered for the
@@ -3184,7 +3184,7 @@ namespace EuroScopePlugIn {
         };
         //------------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the screen object
+        //      =>  ObjectType  - the mType of the screen object
         //      =>  sObjectId   - the ID of the screen object
         //      =>  Pt          - the mouse position
         //      =>  Area        - the area originally registered for the
@@ -3207,7 +3207,7 @@ namespace EuroScopePlugIn {
         };
         //------------------------------------------------------------------
         //  Parameters :
-        //      =>  ObjectType  - the type of the screen object
+        //      =>  ObjectType  - the mType of the screen object
         //      =>  sObjectId   - the ID of the screen object
         //      =>  Pt          - the mouse position
         //      =>  Area        - the area originally registered for the
@@ -3379,7 +3379,7 @@ namespace EuroScopePlugIn {
     private:
 
         int m_Position;// the currently referenced element position
-        int m_ElementType;               // the type of the element
+        int m_ElementType;               // the mType of the element
 
         friend class CPlugInData;
 
@@ -3444,7 +3444,7 @@ namespace EuroScopePlugIn {
         //      false   - esle
         //
         //  Remarks :
-        //      Not all element have coordinates. This function may return
+        //      Not all element have mCoordinates. This function may return
         //      false for Index zero.
         //-----------------------------------------------------------------
 
@@ -3517,7 +3517,7 @@ namespace EuroScopePlugIn {
         //-----------------------------------------------------------------
         //  Return :
         //      the name of the airport this element belongs to
-        //      empty string if the type is invalid
+        //      empty string if the mType is invalid
         //
         //  Description :
         //      It returns the name of the runway for runway and sid/star
@@ -3636,7 +3636,7 @@ namespace EuroScopePlugIn {
         bool GetIsTextReceiveOn(void);
         //-----------------------------------------------------------------
         //  Return :
-        //      A flag indicating if the channel is receiving text messages.
+        //      A flag indicating if the channel is receiving mText messages.
         //-----------------------------------------------------------------
 
 
@@ -3645,7 +3645,7 @@ namespace EuroScopePlugIn {
         bool GetIsTextTransmitOn(void);
         //-----------------------------------------------------------------
         //  Return :
-        //      A flag indicating if the channel is transmitting text messages.
+        //      A flag indicating if the channel is transmitting mText messages.
         //-----------------------------------------------------------------
 
 
@@ -3704,7 +3704,7 @@ namespace EuroScopePlugIn {
         void ToggleTextReceive(void);
         //-----------------------------------------------------------------
         //  Description :
-        //      It changes the text receive setting of the channel (like clicking
+        //      It changes the mText receive setting of the channel (like clicking
         //      on the check box).
         //-----------------------------------------------------------------
 
@@ -3714,7 +3714,7 @@ namespace EuroScopePlugIn {
         void ToggleTextTransmit(void);
         //-----------------------------------------------------------------
         //  Description :
-        //      It changes the text transmit setting of the channel (like clicking
+        //      It changes the mText transmit setting of the channel (like clicking
         //      on the check box).
         //-----------------------------------------------------------------
 
@@ -3863,7 +3863,7 @@ namespace EuroScopePlugIn {
         //  Parameters :
         //      =>  sCallsign   - the callsign of the plane
         //      =>  sLivery     - the livery set in the pilot client
-        //      =>  sPlaneType  - the manufacturer and type set  in the pilot client
+        //      =>  sPlaneType  - the manufacturer and mType set  in the pilot client
         //
         //  Description :
         //      This function is called when a SqwakBox plane information
@@ -3880,7 +3880,7 @@ namespace EuroScopePlugIn {
         //  Parameters :
         //      =>  FlightPlan  - the flight plan reference whose controller
         //                        assigned data is updated
-        //      =>  DataType    - the type of the data updated (CTR_DATA_TYPE ...)
+        //      =>  DataType    - the mType of the data updated (CTR_DATA_TYPE ...)
         //
         //  Description :
         //      All plugins must implement this function to handle the
@@ -3932,7 +3932,7 @@ namespace EuroScopePlugIn {
         //
         //  Return :
         //      an instance to your own radar scren class member or
-        //      nullptr if this type is not handled by your plug-in
+        //      nullptr if this mType is not handled by your plug-in
         //
         //  Description :
         //      When a new radar display is opened your plug-in is called
@@ -4031,16 +4031,16 @@ namespace EuroScopePlugIn {
         //                          - TAG_DATA_CORRELATED
         //      <=  sItemString - the generated string; it is strictly limited
         //                        to 15 chars (plust terminator \0)
-        //      <=  pColorCode  - the color code of the item; return one of
+        //      <=  pColorCode  - the mColor code of the item; return one of
         //                        the TAG_COLOR_ ... value
         //                        TAG_COLOR_DEFAULT - indicates the default for AC state
         //                        TAG_COLOR_RGB_DEFINED - do not use and
-        //                        predefined color, but the return value
+        //                        predefined mColor, but the return value
         //                        in pRGB
-        //      <=  pRGB        - the requested color of the TAG item; it is
+        //      <=  pRGB        - the requested mColor of the TAG item; it is
         //                        used only in case if pColorCode is
         //                        TAG_COLOR_RGB_DEFINED
-        //      <=> pFontSize   - the requested size of the font
+        //      <=> pFontSize   - the requested mFontSize of the font
         //
         //  Description :
         //      All plugins must implement this function to handle the
@@ -4149,11 +4149,11 @@ namespace EuroScopePlugIn {
                                  bool CanBeCreated);
         //-----------------------------------------------------------------
         //  Parameters :
-        //      =>  sDisplayType    - the name of the display type
+        //      =>  sDisplayType    - the name of the display mType
         //      =>  NeedRadarContent- indicates that the default radar content
-        //                            should be displayed in this type
+        //                            should be displayed in this mType
         //      =>  GeoReferenced   - indicates that lat/lon coordnates
-        //                            can be used in the type, and therefore
+        //                            can be used in the mType, and therefore
         //                            zooming in/out a panning is allowed
         //      =>  CanBeSaved      - indicates that ASR file content can
         //                            be saved on exit
@@ -4161,9 +4161,9 @@ namespace EuroScopePlugIn {
         //                            new ASR types
         //
         //  Description :
-        //      Call this function to register your own display type within
+        //      Call this function to register your own display mType within
         //      EuroScope. You need this only in case you would like to
-        //      create a complete new outllok of the view. In your own type
+        //      create a complete new outllok of the view. In your own mType
         //      you are free to display anything to the screen.
         //-----------------------------------------------------------------
 
@@ -4178,7 +4178,7 @@ namespace EuroScopePlugIn {
         //      =>  Code            - the item code (must be bigger than 0)
         //
         //  Description :
-        //      It registers a new TAG item type.
+        //      It registers a new TAG item mType.
         //-----------------------------------------------------------------
 
 
@@ -4233,7 +4233,7 @@ namespace EuroScopePlugIn {
         //-----------------------------------------------------------------
         //  Parameters :
         //      =>  ResizeToo   - indicates that the plugin would liek to
-        //                        change the size of the toolbar item
+        //                        change the mFontSize of the toolbar item
         //
         //  Description :
         //      Call this function to indicate that the toolbar content is
@@ -4316,7 +4316,7 @@ namespace EuroScopePlugIn {
         //
         //  Description :
         //      It starts opening a popup list. You must call the
-        //      AddPopupListElement to fill the list with content. Without
+        //      AddPopupListElement to mFill the list with content. Without
         //      that it will not be displayed. The popup list is a global
         //      resource of EuroScope and there is only one list available.
         //-----------------------------------------------------------------
@@ -4362,7 +4362,7 @@ namespace EuroScopePlugIn {
         int GetConnectionType(void) const;
         //-----------------------------------------------------------------
         //  Return :
-        //      the actual connection type - on of CONNECTION_TYPE_...
+        //      the actual connection mType - on of CONNECTION_TYPE_...
         //-----------------------------------------------------------------
 
 
@@ -4665,9 +4665,9 @@ namespace EuroScopePlugIn {
         CSectorElement SectorFileElementSelectFirst(int ElementType) const;
         //-----------------------------------------------------------------
         //  Parameters :
-        //      =>  ElementType - the type of the elements to be searched
+        //      =>  ElementType - the mType of the elements to be searched
         //                        for; pass SECTOR_ELEMENT_ALL to search
-        //                        for all element type
+        //                        for all element mType
         //
         //  Return :
         //      A sector file element object instance.
@@ -4679,7 +4679,7 @@ namespace EuroScopePlugIn {
         //      cause ES to crash.
         //
         //  Description :
-        //      It selects the first element (of the given type) from the
+        //      It selects the first element (of the given mType) from the
         //      previously selected sectorfile.
         //-----------------------------------------------------------------
 
@@ -4691,9 +4691,9 @@ namespace EuroScopePlugIn {
         //-----------------------------------------------------------------
         //  Parameters :
         //      =>  CurrentElement  - the actually selected sectorfile element
-        //      =>  ElementType     - the type of the elements to be searched
+        //      =>  ElementType     - the mType of the elements to be searched
         //                            for; pass SECTOR_ELEMENT_ALL to search
-        //                            for all element type
+        //                            for all element mType
         //
         //  Return :
         //      A sectrofile element object instance.
@@ -4705,7 +4705,7 @@ namespace EuroScopePlugIn {
         //      cause ES to crash.
         //
         //  Description :
-        //      It selects the next element (of the given type) from the
+        //      It selects the next element (of the given mType) from the
         //      previously selected sectorfile.
         //-----------------------------------------------------------------
 
@@ -4732,7 +4732,7 @@ namespace EuroScopePlugIn {
         //      =>  sMessage        - the message itself
         //      =>  ShowHandler     - should the handler be displayed (if hidden)
         //      =>  ShowUnread      - should the handler be colored with
-        //                            unread message color if not selected
+        //                            unread message mColor if not selected
         //      =>  ShowUnreadEvenIfBusy    - as above even if busy flag is set
         //      =>  StartFlashing   - should the handler be flashing
         //      =>  NeedConfirmation- does this message need a confirmation
