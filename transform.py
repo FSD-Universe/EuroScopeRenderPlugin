@@ -15,8 +15,8 @@ def transform(lat: str, lon: str) -> tuple[float, float]:
     east = 1 if lon[0] == 'E' else -1
     lat = lat[1:].split('.')
     lon = lon[1:].split('.')
-    lat = float(lat[0]) + float(lat[1]) / 60 + float(lat[2]) / 3600 + float(lat[3]) / 360000 * north
-    lon = float(lon[0]) + float(lon[1]) / 60 + float(lon[2]) / 3600 + float(lon[3]) / 360000 * east
+    lat = (float(lat[0]) + float(lat[1]) / 60 + float(f"{lat[2]}.{lat[3]}") / 3600) * north
+    lon = (float(lon[0]) + float(lon[1]) / 60 + float(f"{lon[2]}.{lon[3]}") / 3600) * east
     return lat, lon
 
 
