@@ -22,6 +22,8 @@ namespace RenderPlugin {
 
         std::shared_ptr<RenderDataVector> getRenderData();
 
+        bool isLoaded() const;
+
         void resetData();
 
     protected:
@@ -32,7 +34,7 @@ namespace RenderPlugin {
         Color processColorField(const std::string &rawColor);
     };
 
-    using ProviderPtr = std::unique_ptr<RenderDataProvider>;
+    using ProviderPtr = std::shared_ptr<RenderDataProvider>;
 }
 
 #endif

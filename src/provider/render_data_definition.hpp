@@ -4,12 +4,13 @@
 #ifndef RENDERPLUGIN_RENDER_DATA_DEFINE_H
 #define RENDERPLUGIN_RENDER_DATA_DEFINE_H
 
+#include <d2d1.h>
+#include <gdiplus.h>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 #include <windows.h>
-#include <gdiplus.h>
-#include <d2d1.h>
+
 #include "EuroScopePlugIn.h"
 
 namespace RenderPlugin {
@@ -20,8 +21,8 @@ namespace RenderPlugin {
         uchar green;
         uchar blue;
         uchar alpha;
-        Gdiplus::Color gdiColor;
-        D2D1_COLOR_F d2dColor;
+        Gdiplus::Color gdiColor{};
+        D2D1_COLOR_F d2dColor{};
 
         Color() noexcept: Color(0, 0, 0) {}
 
@@ -139,6 +140,7 @@ namespace RenderPlugin {
         Color mColor{};
         std::wstring mText{}; // text content
         int mFontSize{}; // text font size
+        int mZoom{}; // zoom level, when current zoom level is less than this value, the render data will be ignored
 
         RenderData() = default;
 
@@ -151,7 +153,8 @@ namespace RenderPlugin {
                                                     mRawColor(std::move(instance.mRawColor)),
                                                     mColor(instance.mColor),
                                                     mText(std::move(instance.mText)),
-                                                    mFontSize(instance.mFontSize) {};
+                                                    mFontSize(instance.mFontSize),
+                                                    mZoom(instance.mZoom) {};
     };
 
     using ColorMap = std::map<std::string, Color>;

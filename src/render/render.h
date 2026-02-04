@@ -21,7 +21,7 @@ namespace RenderPlugin {
         virtual void drawText(HDC hdc, const POINT &pt, const RenderData &data) = 0;
     };
 
-    using RenderPtr = std::unique_ptr<Render>;
+    using RenderPtr = std::shared_ptr<Render>;
 }
 
 #endif

@@ -15,6 +15,7 @@ features:
       - [116.40, 39.90]
       - [116.42, 39.91]
       - [116.44, 39.92]
+    zoom: 10
     color: orange
   
   # Area example - draw a restricted zone
@@ -25,6 +26,7 @@ features:
       - [116.41, 39.92]
       - [116.39, 39.92]
     fill: blue
+    zoom: 12
     color: red
   
   # Text example - label the area
@@ -33,4 +35,5 @@ features:
       - [116.40, 39.91]
     text: "Test Area"
     size: 14
+    zoom: 14
     color: yellow

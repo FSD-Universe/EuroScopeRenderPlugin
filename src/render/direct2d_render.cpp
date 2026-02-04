@@ -1,11 +1,11 @@
 // Copyright (c) 2026 Half_nothing
 // SPDX-License-Identifier: MIT
 
-#include "direct2d_render.h"
-
 #include <algorithm>
 #include <dxgiformat.h>
 #include <objbase.h>
+
+#include "direct2d_render.h"
 
 namespace RenderPlugin {
     namespace {

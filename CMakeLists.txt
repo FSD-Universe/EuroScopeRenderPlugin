@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_MFC_FLAG 0)
 set(CMAKE_GENERATOR_PLATFORM "Win32")
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 find_package(yaml-cpp CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 message("Build Type: ${CMAKE_BUILD_TYPE} ${CMAKE_CXX_FLAGS}")
 message("PROJECT_NAME: ${PROJECT_NAME}")
@@ -36,4 +38,4 @@ add_library(${PROJECT_NAME} SHARED ${SOURCE_FILE})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE _X86_ WIN32 _WINDOWS YAML_CPP_STATIC_DEFINE)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE EuroScopePlugIn yaml-cpp::yaml-cpp gdiplus d2d1 dwrite)
+target_link_libraries(${PROJECT_NAME} PRIVATE EuroScopePlugIn yaml-cpp::yaml-cpp fmt::fmt gdiplus d2d1 dwrite)

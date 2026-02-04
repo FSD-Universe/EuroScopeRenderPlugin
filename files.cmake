@@ -1,6 +1,7 @@
 set(SOURCE_FILE
         main.cpp
 
+        src/plugin/euroscope_render_plugin.h
         src/plugin/euroscope_render_definition.h
         src/plugin/euroscope_render_plugin.h
         src/plugin/euroscope_render_plugin.cpp

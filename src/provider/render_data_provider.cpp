@@ -47,4 +47,8 @@ namespace RenderPlugin {
         // else we parse the color
         return Color::fromColorString(rawColor);
     }
+
+    bool RenderDataProvider::isLoaded() const {
+        return mIsLoaded;
+    }
 }

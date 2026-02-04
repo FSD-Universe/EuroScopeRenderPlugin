@@ -60,6 +60,7 @@ namespace YAML {
             if (rhs.mFontSize > 0) {
                 node["size"] = rhs.mFontSize;
             }
+            node["zoom"] = rhs.mZoom;
             return node;
         }
 
@@ -80,6 +81,9 @@ namespace YAML {
             }
             if (node["size"]) {
                 rhs.mFontSize = node["size"].as<int>();
+            }
+            if (node["zoom"]) {
+                rhs.mZoom = node["zoom"].as<int>();
             }
             return true;
         }

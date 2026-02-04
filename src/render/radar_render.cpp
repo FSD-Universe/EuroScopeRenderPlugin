@@ -1,31 +1,21 @@
 // Copyright (c) 2026 Half_nothing
 // SPDX-License-Identifier: MIT
 
-#include <sstream>
+#include <cmath>
 #include <filesystem>
+#include <limits>
+#include <sstream>
+
 #include "radar_render.h"
-#include "render_data_provider.h"
 
 namespace RenderPlugin {
-    RadarRender::RadarRender(ProviderPtr dataProvider,
-                             RenderPtr render,
-                             fs::path configPath) : mDataProvider(std::move(dataProvider)),
-                                                    mRender(std::move(render)),
-                                                    mConfigPath(std::move(configPath)),
-                                                    mIsLoaded(false) {
-        mIsLoaded = mDataProvider->loadData(mConfigPath);
-    }
+    RadarRender::RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render)
+            : mDataProvider(dataProvider), mRender(render), mLogger(logger) {}
 
-    RadarRender::~RadarRender() {
-        if (mIsLoaded) {
-            mDataProvider->resetData();
-            mDataProvider.reset();
-            mIsLoaded = false;
-        }
-    }
+    RadarRender::~RadarRender() {}
 
     void RadarRender::OnRefresh(HDC hDC, int Phase) {
-        if (!mIsLoaded || Phase != EuroScopePlugIn::REFRESH_PHASE_BACK_BITMAP) {
+        if (!mDataProvider->isLoaded() || Phase != EuroScopePlugIn::REFRESH_PHASE_BACK_BITMAP) {
             return;
         }
 
@@ -34,7 +24,13 @@ namespace RenderPlugin {
             return;
         }
 
+        const int currentZoom = getCurrentZoomLevel();
+
         for (const auto &data: *renderData) {
+            // 当当前缩放等级小于要素配置的 mZoom 时，不绘制该要素
+            if (currentZoom < data.mZoom) {
+                continue;
+            }
             switch (data.mType) {
                 case RenderType::LINE:
                     drawLine(hDC, data);
@@ -47,6 +43,28 @@ namespace RenderPlugin {
                     break;
             }
         }
+    }
+
+    int RadarRender::getCurrentZoomLevel() {
+        EuroScopePlugIn::CPosition leftDown{};
+        EuroScopePlugIn::CPosition rightUp{};
+        GetDisplayArea(&leftDown, &rightUp);
+
+        const double spanLon = rightUp.m_Longitude - leftDown.m_Longitude;
+        const double spanLat = rightUp.m_Latitude - leftDown.m_Latitude;
+        const double spanDeg = (std::max)(std::abs(spanLon), std::abs(spanLat));
+
+        if (spanDeg <= std::numeric_limits<double>::epsilon()) {
+            // 极端情况下认为是最大缩放（19 级）
+            return 19;
+        }
+
+        // 将当前显示的经纬度跨度映射为标准地图缩放级别 1–19。
+        // 近似采用 Web 地图的定义：zoom ≈ log2(360 / spanDeg)，然后裁剪到 [1, 19]。
+        const double rawZoom = std::log2(360.0 / spanDeg);
+        int zoom = static_cast<int>(std::round(rawZoom));
+        zoom = std::clamp(zoom, 1, 19);
+        return zoom;
     }
 
     void RadarRender::drawLine(HDC hDC, const RenderData &data) {
@@ -88,18 +106,5 @@ namespace RenderPlugin {
         mRender->drawText(hDC, pt, data);
     }
 
-    bool RadarRender::OnCompileCommand(const char *sCommandLine) {
-        std::string command(sCommandLine);
-        if (command == ".reload") {
-            mDataProvider->resetData();
-            mIsLoaded = mDataProvider->loadData(mConfigPath);
-            RequestRefresh();
-            return true;
-        }
-        return false;
-    }
-
-    void RadarRender::OnAsrContentToBeClosed() {
-
-    }
+    void RadarRender::OnAsrContentToBeClosed() {}
 }

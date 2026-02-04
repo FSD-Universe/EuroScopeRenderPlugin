@@ -4,11 +4,11 @@
 #ifndef RENDERPLUGIN_DIRECT2D_RENDER_H
 #define RENDERPLUGIN_DIRECT2D_RENDER_H
 
-#include "render.h"
-
 #include <d2d1.h>
 #include <dwrite.h>
 #include <wrl/client.h>
+
+#include "render.h"
 
 namespace RenderPlugin {
     class Direct2DRender : public Render {

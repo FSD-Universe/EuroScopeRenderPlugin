@@ -4,16 +4,17 @@
 #ifndef RENDERPLUGIN_RADAR_RENDER_H
 #define RENDERPLUGIN_RADAR_RENDER_H
 
-#include "render_data_provider.h"
-#include "EuroScopePlugIn.h"
-#include "render.h"
-#include <windows.h>
 #include <memory>
+#include <windows.h>
+
+#include "logger.h"
+#include "render.h"
+#include "render_data_provider.h"
 
 namespace RenderPlugin {
     class RadarRender : public EuroScopePlugIn::CRadarScreen {
     public:
-        RadarRender(ProviderPtr dataProvider, RenderPtr render, fs::path configPath);
+        RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render);
 
         virtual ~RadarRender();
 
@@ -21,21 +22,18 @@ namespace RenderPlugin {
 
         void OnRefresh(HDC hDC, int Phase) override;
 
-        bool OnCompileCommand(const char *sCommandLine) override;
+        int getCurrentZoomLevel();
 
     private:
         ProviderPtr mDataProvider;
         RenderPtr mRender;
-        fs::path mConfigPath;
-        bool mIsLoaded;
+        std::shared_ptr<Logger> mLogger;
 
         void drawLine(HDC hDC, const RenderData &data);
 
         void drawArea(HDC hDC, const RenderData &data);
 
         void drawText(HDC hDC, const RenderData &data);
-
-
     };
 }
 
