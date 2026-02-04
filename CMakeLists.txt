@@ -31,8 +31,9 @@ link_directories("${PROJECT_SOURCE_DIR}/lib")
 
 include(files.cmake)
 
+#add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILE})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE _X86_ WIN32 _WINDOWS YAML_CPP_STATIC_DEFINE)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE EuroScopePlugIn yaml-cpp::yaml-cpp gdiplus)
+target_link_libraries(${PROJECT_NAME} PRIVATE EuroScopePlugIn yaml-cpp::yaml-cpp gdiplus d2d1 dwrite)

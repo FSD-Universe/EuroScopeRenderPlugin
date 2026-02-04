@@ -4,6 +4,7 @@
 #include <fstream>
 #include "euroscope_render_plugin.h"
 #include "render_data_yaml_provider.h"
+#include "direct2d_render.h"
 
 namespace fs = std::filesystem;
 
@@ -28,7 +29,9 @@ void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn **ppPlu
     auto provider = std::make_unique<RenderPlugin::RenderDataYamlProvider>();
     *logStream << "EuroScopePlugInInit: provider created" << std::endl;
     *logStream << "EuroScopePlugInInit: config path: " << getRealFileName("config.yaml") << std::endl;
-    auto render = std::make_unique<RenderPlugin::RadarRender>(std::move(provider), getRealFileName("config.yaml"));
+    auto d2dRender = std::make_unique<RenderPlugin::Direct2DRender>();
+    auto render = std::make_unique<RenderPlugin::RadarRender>(std::move(provider), std::move(d2dRender),
+                                                              getRealFileName("config.yaml"));
     *logStream << "EuroScopePlugInInit: render created" << std::endl;
     *ppPlugInInstance = pPlugInInstance = new RenderPlugin::EuroScopeRenderPlugin(std::move(render));
     *logStream << "EuroScopePlugInInit: plugin created" << std::endl;
@@ -61,6 +64,7 @@ inline std::string getRealFileName(const std::string &path) {
 
 //int main() {
 //    auto provider = std::make_unique<RenderPlugin::RenderDataYamlProvider>();
-//    auto render = std::make_unique<RenderPlugin::RadarRender>(std::move(provider), "config.yaml");
+//    auto d2dRender = std::make_unique<RenderPlugin::Direct2DRender>();
+//    auto render = std::make_unique<RenderPlugin::RadarRender>(std::move(provider), std::move(d2dRender), "config.yaml");
 //    return 0;
 //}

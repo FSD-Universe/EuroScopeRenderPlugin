@@ -3,7 +3,8 @@
 
 #include <fstream>
 #include "render_data_provider.h"
-#include "color_utils.h"
+
+const RenderPlugin::Color DEFAULT_COLOR = RenderPlugin::Color();
 
 namespace RenderPlugin {
     RenderDataProvider::RenderDataProvider() : mColorMap(nullptr), mRenderDataVector(nullptr), mIsLoaded(false) {}
@@ -16,7 +17,7 @@ namespace RenderPlugin {
         }
     }
 
-    Gdiplus::Color RenderDataProvider::getColor(const std::string &name) {
+    Color RenderDataProvider::getColor(const std::string &name) {
         if (mColorMap->find(name) == mColorMap->end()) {
             return DEFAULT_COLOR;
         }
@@ -33,7 +34,7 @@ namespace RenderPlugin {
         mIsLoaded = false;
     }
 
-    Gdiplus::Color RenderDataProvider::processColorField(const std::string &rawColor) {
+    Color RenderDataProvider::processColorField(const std::string &rawColor) {
         if (rawColor.empty()) {
             // if the color field is empty, we use the default color
             return DEFAULT_COLOR;
@@ -44,6 +45,6 @@ namespace RenderPlugin {
             return this->getColor(rawColor);
         }
         // else we parse the color
-        return parseColor(rawColor);
+        return Color::fromColorString(rawColor);
     }
 }

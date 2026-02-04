@@ -18,7 +18,7 @@ namespace RenderPlugin {
 
         virtual bool loadData(const fs::path &path) = 0;
 
-        Gdiplus::Color getColor(const std::string &name);
+        Color getColor(const std::string &name);
 
         std::shared_ptr<RenderDataVector> getRenderData();
 
@@ -29,7 +29,7 @@ namespace RenderPlugin {
         std::shared_ptr<ColorMap> mColorMap;
         std::shared_ptr<RenderDataVector> mRenderDataVector;
 
-        Gdiplus::Color processColorField(const std::string &rawColor);
+        Color processColorField(const std::string &rawColor);
     };
 
     using ProviderPtr = std::unique_ptr<RenderDataProvider>;

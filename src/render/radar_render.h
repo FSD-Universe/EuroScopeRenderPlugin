@@ -6,14 +6,14 @@
 
 #include "render_data_provider.h"
 #include "EuroScopePlugIn.h"
+#include "render.h"
 #include <windows.h>
-#include <gdiplus.h>
 #include <memory>
 
 namespace RenderPlugin {
     class RadarRender : public EuroScopePlugIn::CRadarScreen {
     public:
-        RadarRender(ProviderPtr dataProvider, fs::path configPath);
+        RadarRender(ProviderPtr dataProvider, RenderPtr render, fs::path configPath);
 
         virtual ~RadarRender();
 
@@ -25,9 +25,8 @@ namespace RenderPlugin {
 
     private:
         ProviderPtr mDataProvider;
+        RenderPtr mRender;
         fs::path mConfigPath;
-        Gdiplus::GdiplusStartupInput mGdiplusStartupInput;
-        ULONG_PTR mGdiplusToken;
         bool mIsLoaded;
 
         void drawLine(HDC hDC, const RenderData &data);

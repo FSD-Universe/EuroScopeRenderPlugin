@@ -9,9 +9,76 @@
 #include <map>
 #include <windows.h>
 #include <gdiplus.h>
+#include <d2d1.h>
 #include "EuroScopePlugIn.h"
 
 namespace RenderPlugin {
+    struct Color {
+        using uchar = unsigned char;
+
+        uchar red;
+        uchar green;
+        uchar blue;
+        uchar alpha;
+        Gdiplus::Color gdiColor;
+        D2D1_COLOR_F d2dColor;
+
+        Color() noexcept: Color(0, 0, 0) {}
+
+        Color(uchar red, uchar green, uchar blue) noexcept: Color(red, green, blue, 255) {}
+
+        Color(uchar red, uchar green, uchar blue, uchar alpha) noexcept
+                : red(red), green(green), blue(blue), alpha(alpha) {
+            updateDerivedColors();
+        }
+
+        static Color fromColorString(const std::string &color) {
+            if (color.empty() || color[0] != '#') {
+                return Color(0, 0, 0);
+            }
+
+            std::string hex = color.substr(1);
+            if (hex.length() == 3) {          // #RGB
+                hex = expandShortHex(hex, false);
+            } else if (hex.length() == 4) {   // #RGBA
+                hex = expandShortHex(hex, true);
+            } else if (hex.length() != 6 && hex.length() != 8) {
+                return Color(0, 0, 0);
+            }
+
+            try {
+                uchar r = std::stoi(hex.substr(0, 2), nullptr, 16);
+                uchar g = std::stoi(hex.substr(2, 2), nullptr, 16);
+                uchar b = std::stoi(hex.substr(4, 2), nullptr, 16);
+                if (hex.length() == 6) {
+                    return Color(r, g, b);
+                }
+                uchar a = std::stoi(hex.substr(6, 2), nullptr, 16);
+                return Color(r, g, b, a);
+            } catch (...) {
+                return Color(0, 0, 0);
+            }
+        }
+
+        void updateDerivedColors() {
+            gdiColor = Gdiplus::Color(alpha, red, green, blue);
+            d2dColor = D2D1::ColorF(red / 255.0f, green / 255.0f, blue / 255.0f, alpha / 255.0f);
+        }
+
+    private:
+        static std::string expandShortHex(const std::string &shortHex, bool hasAlpha) {
+            std::string expanded;
+            expanded.reserve(hasAlpha ? 8 : 6);
+
+            for (char c: shortHex) {
+                expanded.push_back(c);
+                expanded.push_back(c);
+            }
+
+            return expanded;
+        }
+    };
+
     struct Coordinate {
         double mLongitude{};
         double mLatitude{};
@@ -29,7 +96,6 @@ namespace RenderPlugin {
     };
 
     using Coordinates = std::vector<Coordinate>;
-    using ColorMap = std::map<std::string, Gdiplus::Color>;
 
     enum class RenderType {
         LINE,
@@ -68,9 +134,9 @@ namespace RenderPlugin {
         RenderType mType{RenderType::AREA};
         Coordinates mCoordinates{};
         std::string mRawFill{}; // color which will be filled in the area, only used in area type
-        Gdiplus::Color mFill{};
+        Color mFill{};
         std::string mRawColor{}; // line color or text color
-        Gdiplus::Color mColor{};
+        Color mColor{};
         std::wstring mText{}; // text content
         int mFontSize{}; // text font size
 
@@ -88,6 +154,7 @@ namespace RenderPlugin {
                                                     mFontSize(instance.mFontSize) {};
     };
 
+    using ColorMap = std::map<std::string, Color>;
     using RenderDataVector = std::vector<RenderData>;
     constexpr const char *COLOR_KEY = "color";
     constexpr const char *FEATURE_KEY = "features";

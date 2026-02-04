@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 #include "render_data_yaml_provider.h"
-#include "color_utils.h"
 
 namespace RenderPlugin {
     RenderDataYamlProvider::RenderDataYamlProvider() : RenderDataProvider() {}
@@ -29,7 +28,7 @@ namespace RenderPlugin {
             if (value.at(0) != '#') {
                 continue;
             }
-            mColorMap->emplace(key, parseColor(value));
+            mColorMap->emplace(key, Color::fromColorString(value));
         }
 
         // we have already written a specialized template to process the render data
@@ -37,8 +36,8 @@ namespace RenderPlugin {
         mRenderDataVector = std::make_shared<RenderDataVector>(featuresNode.as<RenderDataVector>());
         for (auto &element: *mRenderDataVector) {
             if (element.mRawFill.empty() && element.mRawColor.empty()) {
-                element.mFill = DEFAULT_COLOR;
-                element.mColor = DEFAULT_COLOR;
+                element.mFill = Color();
+                element.mColor = Color();
                 continue;
             }
             element.mFill = this->processColorField(element.mRawFill);

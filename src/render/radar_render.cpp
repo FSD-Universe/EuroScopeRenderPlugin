@@ -6,13 +6,13 @@
 #include "radar_render.h"
 #include "render_data_provider.h"
 
-using namespace Gdiplus;
-
 namespace RenderPlugin {
-    RadarRender::RadarRender(ProviderPtr dataProvider, fs::path configPath) : mDataProvider(std::move(dataProvider)),
-                                                                              mConfigPath(std::move(configPath)),
-                                                                              mIsLoaded(false) {
-        GdiplusStartup(&mGdiplusToken, &mGdiplusStartupInput, nullptr);
+    RadarRender::RadarRender(ProviderPtr dataProvider,
+                             RenderPtr render,
+                             fs::path configPath) : mDataProvider(std::move(dataProvider)),
+                                                    mRender(std::move(render)),
+                                                    mConfigPath(std::move(configPath)),
+                                                    mIsLoaded(false) {
         mIsLoaded = mDataProvider->loadData(mConfigPath);
     }
 
@@ -21,7 +21,6 @@ namespace RenderPlugin {
             mDataProvider->resetData();
             mDataProvider.reset();
             mIsLoaded = false;
-            GdiplusShutdown(mGdiplusToken);
         }
     }
 
@@ -55,17 +54,13 @@ namespace RenderPlugin {
             return;
         }
 
-        std::vector<Point> points;
+        std::vector<POINT> points;
         for (const auto &coord: data.mCoordinates) {
             POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
-            points.emplace_back(pt.x, pt.y);
+            points.push_back(pt);
         }
 
-        Graphics graphics(hDC);
-        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-        Pen pen(data.mColor, 1.0f);
-
-        graphics.DrawLines(&pen, points.data(), static_cast<int>(points.size()));
+        mRender->drawLine(hDC, points, data);
     }
 
     void RadarRender::drawArea(HDC hDC, const RenderData &data) {
@@ -73,21 +68,13 @@ namespace RenderPlugin {
             return;
         }
 
-        std::vector<Point> points;
+        std::vector<POINT> points;
         for (const auto &coord: data.mCoordinates) {
             POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
-            points.emplace_back(pt.x, pt.y);
+            points.push_back(pt);
         }
 
-        Graphics graphics(hDC);
-        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-        Pen pen(data.mColor, 1.0f);
-        SolidBrush brush(data.mFill);
-
-        graphics.FillPolygon(&brush, points.data(), static_cast<int>(points.size()));
-        if (!data.mRawColor.empty()) {
-            graphics.DrawPolygon(&pen, points.data(), static_cast<int>(points.size()));
-        }
+        mRender->drawArea(hDC, points, data);
     }
 
     void RadarRender::drawText(HDC hDC, const RenderData &data) {
@@ -97,13 +84,8 @@ namespace RenderPlugin {
 
         const auto &coord = data.mCoordinates[0];
         POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
-        PointF point = PointF(pt.x, pt.y);
 
-        Graphics graphics(hDC);
-        graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
-        SolidBrush brush(data.mColor);
-        Font font(L"Euroscope", data.mFontSize, FontStyleRegular, UnitPixel);
-        graphics.DrawString(data.mText.c_str(), -1, &font, point,&brush);
+        mRender->drawText(hDC, pt, data);
     }
 
     bool RadarRender::OnCompileCommand(const char *sCommandLine) {
