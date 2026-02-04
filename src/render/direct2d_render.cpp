@@ -224,8 +224,60 @@ namespace RenderPlugin {
         const FLOAT baseSize = data.mFontSize > 0 ? static_cast<FLOAT>(data.mFontSize) : 12.0f;
         const FLOAT fontSize = effectiveFontSizePixels > 0.0f ? effectiveFontSizePixels : baseSize;
 
+        // 先用左对齐布局测量实际宽高，避免 CENTER/TRAILING 时 GetMetrics 返回整块布局宽
+        Microsoft::WRL::ComPtr<IDWriteTextFormat> measureFormat;
+        if (FAILED(mDWriteFactory->CreateTextFormat(
+            L"Euroscope",
+            nullptr,
+            DWRITE_FONT_WEIGHT_REGULAR,
+            DWRITE_FONT_STYLE_NORMAL,
+            DWRITE_FONT_STRETCH_NORMAL,
+            fontSize,
+            L"",
+            measureFormat.GetAddressOf()
+        ))) {
+            end();
+            return;
+        }
+        measureFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+        measureFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+        measureFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+
+        constexpr FLOAT maxLayoutSize = 4096.0f;
+        Microsoft::WRL::ComPtr<IDWriteTextLayout> measureLayout;
+        if (FAILED(mDWriteFactory->CreateTextLayout(
+            data.mText.c_str(),
+            static_cast<UINT32>(data.mText.length()),
+            measureFormat.Get(),
+            maxLayoutSize,
+            maxLayoutSize,
+            measureLayout.GetAddressOf()
+        ))) {
+            end();
+            return;
+        }
+        DWRITE_TEXT_METRICS measureMetrics{};
+        if (FAILED(measureLayout->GetMetrics(&measureMetrics))) {
+            end();
+            return;
+        }
+        const FLOAT contentWidth = measureMetrics.width;
+        const FLOAT contentHeight = measureMetrics.height;
+
+        DWRITE_TEXT_ALIGNMENT alignment = DWRITE_TEXT_ALIGNMENT_LEADING;
+        switch (data.mTextAnchor) {
+            case TextAnchor::Center:
+                alignment = DWRITE_TEXT_ALIGNMENT_CENTER;
+                break;
+            case TextAnchor::TopRight:
+                alignment = DWRITE_TEXT_ALIGNMENT_TRAILING;
+                break;
+            default:
+                break;
+        }
+
         Microsoft::WRL::ComPtr<IDWriteTextFormat> format;
-        if (SUCCEEDED(mDWriteFactory->CreateTextFormat(
+        if (FAILED(mDWriteFactory->CreateTextFormat(
             L"Euroscope",
             nullptr,
             DWRITE_FONT_WEIGHT_REGULAR,
@@ -235,33 +287,46 @@ namespace RenderPlugin {
             L"",
             format.GetAddressOf()
         ))) {
-            format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-            format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+            end();
+            return;
+        }
+        format->SetTextAlignment(alignment);
+        format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+        format->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+
+        // 按实际内容尺寸创建绘制用 layout，保证定位正确
+        const FLOAT drawLayoutWidth = (contentWidth > 0.0f) ? contentWidth + 1.0f : 1.0f;
+        const FLOAT drawLayoutHeight = (contentHeight > 0.0f) ? contentHeight + 1.0f : 1.0f;
+        Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
+        if (FAILED(mDWriteFactory->CreateTextLayout(
+            data.mText.c_str(),
+            static_cast<UINT32>(data.mText.length()),
+            format.Get(),
+            drawLayoutWidth,
+            drawLayoutHeight,
+            textLayout.GetAddressOf()
+        ))) {
+            end();
+            return;
         }
 
-        RECT rc{};
-        if (GetClipBox(hdc, &rc) == ERROR) {
-            rc.left = 0;
-            rc.top = 0;
-            rc.right = 4096;
-            rc.bottom = 4096;
+        FLOAT originX = static_cast<FLOAT>(pt.x);
+        switch (data.mTextAnchor) {
+            case TextAnchor::Center:
+                originX = static_cast<FLOAT>(pt.x) - contentWidth * 0.5f;
+                break;
+            case TextAnchor::TopRight:
+                originX = static_cast<FLOAT>(pt.x) - contentWidth;
+                break;
+            default:
+                break;
         }
-
-        D2D1_RECT_F layout = toRectF(rc);
-        layout.left = static_cast<float>(pt.x);
-        layout.top = static_cast<float>(pt.y);
+        const D2D1_POINT_2F origin = D2D1::Point2F(originX, static_cast<FLOAT>(pt.y));
 
         Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
         if (SUCCEEDED(mDCRenderTarget->CreateSolidColorBrush(data.mColor.d2dColor, brush.GetAddressOf()))) {
-            mDCRenderTarget->DrawTextA(
-                data.mText.c_str(),
-                static_cast<UINT32>(data.mText.size()),
-                format.Get(),
-                layout,
-                brush.Get(),
-                D2D1_DRAW_TEXT_OPTIONS_NO_SNAP,
-                DWRITE_MEASURING_MODE_NATURAL
-            );
+            mDCRenderTarget->DrawTextLayout(origin, textLayout.Get(), brush.Get(),
+                D2D1_DRAW_TEXT_OPTIONS_NO_SNAP);
         }
 
         end();

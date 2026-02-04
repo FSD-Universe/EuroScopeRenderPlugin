@@ -157,6 +157,42 @@ namespace RenderPlugin {
         return LineStyle::Solid;
     }
 
+    // 文字控制点：控制点对应文字框的左上角、水平居中还是右上角（垂直均为顶部）
+    enum class TextAnchor {
+        TopLeft,
+        Center,
+        TopRight
+    };
+
+    constexpr auto TEXT_ANCHOR_TOP_LEFT = "topLeft";
+    constexpr auto TEXT_ANCHOR_CENTER = "center";
+    constexpr auto TEXT_ANCHOR_TOP_RIGHT = "topRight";
+
+    inline std::string textAnchorToString(TextAnchor anchor) {
+        switch (anchor) {
+            case TextAnchor::TopLeft:
+                return TEXT_ANCHOR_TOP_LEFT;
+            case TextAnchor::Center:
+                return TEXT_ANCHOR_CENTER;
+            case TextAnchor::TopRight:
+                return TEXT_ANCHOR_TOP_RIGHT;
+            default:
+                return TEXT_ANCHOR_TOP_LEFT;
+        }
+    }
+
+    inline TextAnchor stringToTextAnchor(const std::string &str) {
+        if (str.empty()) return TextAnchor::TopLeft;
+        std::string lower;
+        lower.reserve(str.size());
+        for (unsigned char c : str) {
+            lower.push_back(static_cast<char>(std::tolower(c)));
+        }
+        if (lower == TEXT_ANCHOR_CENTER) return TextAnchor::Center;
+        if (lower == TEXT_ANCHOR_TOP_RIGHT) return TextAnchor::TopRight;
+        return TextAnchor::TopLeft;
+    }
+
     struct RenderData {
         RenderType mType{RenderType::AREA};
         Coordinates mCoordinates{};
@@ -164,8 +200,9 @@ namespace RenderPlugin {
         Color mFill{};
         std::string mRawColor{}; // line color or text color
         Color mColor{};
-        std::wstring mText{}; // text content
+        std::wstring mText{}; // text content, supports multi-line with \n
         int mFontSize{}; // text font size
+        TextAnchor mTextAnchor{TextAnchor::TopLeft}; // text control point: topLeft | center | topRight
         int mZoom{}; // zoom level, when current zoom level is less than this value, the render data will be ignored
         LineStyle mLineStyle{LineStyle::Solid}; // line style for LINE type (solid / dashed)
         float mStrokeWidth{0.0f};   // line/outline width, 0 = use default (1.0 solid, 2.0 dashed)
@@ -184,6 +221,7 @@ namespace RenderPlugin {
                                                     mColor(instance.mColor),
                                                     mText(std::move(instance.mText)),
                                                     mFontSize(instance.mFontSize),
+                                                    mTextAnchor(instance.mTextAnchor),
                                                     mZoom(instance.mZoom),
                                                     mLineStyle(instance.mLineStyle),
                                                     mStrokeWidth(instance.mStrokeWidth),

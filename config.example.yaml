@@ -1,0 +1,196 @@
+# =============================================================================
+# 功能测试配置：覆盖线段、区域、文字及所有可选参数
+# 使用方式：复制为 config.yaml 或指定路径加载，在地图中缩放以观察不同 zoom 的显示
+# =============================================================================
+
+color:
+  # 名称引用
+  red: "#FF0000"
+  blue: "#0000FF"
+  green: "#00FF00"
+  black: "#000000"
+  white: "#FFFFFF"
+  gray: "#808080"
+  orange: "#FFA500"
+  # 简写 #RGB
+  cyan: "#0FF"
+  magenta: "#F0F"
+  # 带透明度（若渲染支持）
+  semiRed: "#FF000080"
+
+features:
+
+  # ---------------------------------------------------------------------------
+  # 线段 (line) 测试
+  # ---------------------------------------------------------------------------
+
+  # 实线，默认线宽，名称颜色，zoom=0 始终显示
+  - type: line
+    coordinates:
+      - [116.36, 39.88]
+      - [116.38, 39.88]
+      - [116.38, 39.90]
+    color: red
+    zoom: 0
+
+  # 实线，自定义 strokeWidth，直接十六进制颜色
+  - type: line
+    coordinates:
+      - [116.38, 39.88]
+      - [116.42, 39.88]
+    color: "#0066CC"
+    strokeWidth: 3
+    zoom: 8
+
+  # 虚线，stroke + strokeWidth + dashLength + gapLength
+  - type: line
+    coordinates:
+      - [116.36, 39.87]
+      - [116.44, 39.87]
+    color: gray
+    stroke: dashed
+    strokeWidth: 2
+    dashLength: 14
+    gapLength: 7
+    zoom: 8
+
+  # 虚线，使用 dash 数组简写
+  - type: line
+    coordinates:
+      - [116.36, 39.86]
+      - [116.44, 39.86]
+    color: orange
+    stroke: dashed
+    strokeWidth: 2.5
+    dash: [10, 5]
+    zoom: 9
+
+  # lineStyle 别名（与 stroke 等价）
+  - type: line
+    coordinates:
+      - [116.37, 39.89]
+      - [116.41, 39.89]
+    color: green
+    lineStyle: dashed
+    strokeWidth: 1.5
+    dash: [6, 4]
+    zoom: 10
+
+  # ---------------------------------------------------------------------------
+  # 多边形 (area) 测试
+  # ---------------------------------------------------------------------------
+
+  # 填充 + 实线边框，名称颜色
+  - type: area
+    coordinates:
+      - [116.39, 39.90]
+      - [116.41, 39.90]
+      - [116.41, 39.92]
+      - [116.39, 39.92]
+    fill: blue
+    color: black
+    zoom: 9
+
+  # 填充 + 虚线边框，strokeWidth + dashLength + gapLength
+  - type: area
+    coordinates:
+      - [116.42, 39.89]
+      - [116.44, 39.89]
+      - [116.44, 39.91]
+      - [116.42, 39.91]
+    fill: "#EEEEEE"
+    color: "#333333"
+    stroke: dashed
+    strokeWidth: 2
+    dashLength: 10
+    gapLength: 5
+    zoom: 10
+
+  # 填充 + 虚线边框，dash 数组
+  - type: area
+    coordinates:
+      - [116.40, 39.905]
+      - [116.415, 39.905]
+      - [116.415, 39.918]
+      - [116.40, 39.918]
+    fill: cyan
+    color: black
+    lineStyle: dashed
+    strokeWidth: 1.5
+    dash: [8, 4]
+    zoom: 11
+
+  # ---------------------------------------------------------------------------
+  # 文字 (text) 测试
+  # ---------------------------------------------------------------------------
+
+  # 默认 textAnchor = topLeft，单行
+  - type: text
+    coordinates:
+      - [116.39, 39.91]
+    text: "左上锚点"
+    size: 14
+    color: black
+    zoom: 9
+
+  # textAnchor: center，单行
+  - type: text
+    coordinates:
+      - [116.41, 39.91]
+    text: "居中锚点"
+    size: 14
+    textAnchor: center
+    color: "#0066CC"
+    zoom: 9
+
+  # textAnchor: topRight，单行
+  - type: text
+    coordinates:
+      - [116.43, 39.91]
+    text: "右上锚点"
+    size: 14
+    textAnchor: topRight
+    color: red
+    zoom: 9
+
+  # 多行：\n 换行
+  - type: text
+    coordinates:
+      - [116.405, 39.895]
+    text: "多行\n第二行\n第三行"
+    size: 12
+    textAnchor: center
+    color: "#333333"
+    zoom: 10
+
+  # 多行：YAML 字面块（|）
+  - type: text
+    coordinates:
+      - [116.435, 39.895]
+    text: |
+      YAML多行
+      块格式
+    size: 12
+    textAnchor: topLeft
+    color: green
+    zoom: 10
+
+  # 不同 size、名称颜色
+  - type: text
+    coordinates:
+      - [116.41, 39.925]
+    text: "大号字"
+    size: 18
+    textAnchor: center
+    color: orange
+    zoom: 11
+
+  # zoom=0 文字始终显示
+  - type: text
+    coordinates:
+      - [116.38, 39.93]
+    text: "任意缩放可见 (zoom=0)"
+    size: 11
+    textAnchor: topLeft
+    color: gray
+    zoom: 0

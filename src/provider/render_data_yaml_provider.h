@@ -60,6 +60,9 @@ namespace YAML {
             if (rhs.mFontSize > 0) {
                 node["size"] = rhs.mFontSize;
             }
+            if (rhs.mTextAnchor != RenderPlugin::TextAnchor::TopLeft) {
+                node["textAnchor"] = RenderPlugin::textAnchorToString(rhs.mTextAnchor);
+            }
             node["zoom"] = rhs.mZoom;
             node["stroke"] = RenderPlugin::lineStyleToString(rhs.mLineStyle);
             if (rhs.mStrokeWidth > 0.0f) node["strokeWidth"] = rhs.mStrokeWidth;
@@ -87,6 +90,9 @@ namespace YAML {
             }
             if (node["size"]) {
                 rhs.mFontSize = node["size"].as<int>();
+            }
+            if (node["textAnchor"]) {
+                rhs.mTextAnchor = RenderPlugin::stringToTextAnchor(node["textAnchor"].as<std::string>());
             }
             if (node["zoom"]) {
                 rhs.mZoom = node["zoom"].as<int>();
