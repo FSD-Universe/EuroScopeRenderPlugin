@@ -17,7 +17,8 @@ namespace RenderPlugin {
 
         void drawArea(HDC hdc, const std::vector<POINT> &points, const RenderData &data) override;
 
-        void drawText(HDC hdc, const POINT &pt, const RenderData &data) override;
+        void drawText(HDC hdc, const POINT &pt, const RenderData &data,
+                     float effectiveFontSizePixels = 0.0f) override;
 
     private:
         Gdiplus::GdiplusStartupInput mGdiplusStartupInput;

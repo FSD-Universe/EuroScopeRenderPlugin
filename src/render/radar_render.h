@@ -23,6 +23,8 @@ namespace RenderPlugin {
         void OnRefresh(HDC hDC, int Phase) override;
 
         int getCurrentZoomLevel();
+        /** 当前视野的经纬度跨度（度），用于连续缩放文字等 */
+        double getCurrentSpanDeg();
 
     private:
         ProviderPtr mDataProvider;
@@ -33,7 +35,7 @@ namespace RenderPlugin {
 
         void drawArea(HDC hDC, const RenderData &data);
 
-        void drawText(HDC hDC, const RenderData &data);
+        void drawText(HDC hDC, const RenderData &data, double spanDeg);
     };
 }
 

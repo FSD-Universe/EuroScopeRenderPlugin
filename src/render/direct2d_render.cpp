@@ -20,8 +20,6 @@ namespace RenderPlugin {
     }
 
     Direct2DRender::Direct2DRender() {
-        // 作为插件被宿主加载时，宿主可能已经初始化了 COM，或使用了不同的 Apartment。
-        // 这里尽量“温和”地初始化：如果模式冲突则继续使用现有 COM 环境。
         const HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
         if (SUCCEEDED(hr)) {
             mComInitialized = true;
@@ -104,6 +102,30 @@ namespace RenderPlugin {
         if (points.size() < 2) return;
         if (FAILED(begin(hdc))) return;
 
+        const FLOAT strokeWidth = data.mStrokeWidth > 0.0f
+            ? data.mStrokeWidth
+            : (data.mLineStyle == LineStyle::Dashed ? 2.5f : 1.0f);
+
+        Microsoft::WRL::ComPtr<ID2D1StrokeStyle> dashedStyle;
+        ID2D1StrokeStyle *strokeStyle = nullptr;
+        if (data.mLineStyle == LineStyle::Dashed && mD2DFactory) {
+            const FLOAT dashLen = data.mDashLength > 0.0f ? data.mDashLength : 10.0f;
+            const FLOAT gapLen = data.mGapLength > 0.0f ? data.mGapLength : 6.0f;
+            const D2D1_STROKE_STYLE_PROPERTIES dashProps = D2D1::StrokeStyleProperties(
+                D2D1_CAP_STYLE_FLAT,
+                D2D1_CAP_STYLE_FLAT,
+                D2D1_CAP_STYLE_FLAT,
+                D2D1_LINE_JOIN_MITER,
+                10.0f,
+                D2D1_DASH_STYLE_CUSTOM,
+                0.0f
+            );
+            const FLOAT dashArray[] = {dashLen, gapLen};
+            if (SUCCEEDED(mD2DFactory->CreateStrokeStyle(dashProps, dashArray, 2, dashedStyle.GetAddressOf()))) {
+                strokeStyle = dashedStyle.Get();
+            }
+        }
+
         Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
         if (SUCCEEDED(mDCRenderTarget->CreateSolidColorBrush(data.mColor.d2dColor, brush.GetAddressOf()))) {
             for (size_t i = 1; i < points.size(); ++i) {
@@ -113,7 +135,8 @@ namespace RenderPlugin {
                     D2D1::Point2F(static_cast<float>(p0.x), static_cast<float>(p0.y)),
                     D2D1::Point2F(static_cast<float>(p1.x), static_cast<float>(p1.y)),
                     brush.Get(),
-                    1.0f
+                    strokeWidth,
+                    strokeStyle
                 );
             }
         }
@@ -159,22 +182,49 @@ namespace RenderPlugin {
             mDCRenderTarget->FillGeometry(geometry.Get(), fillBrush.Get());
         }
 
-        if (!data.mRawColor.empty()) {
+        const bool drawOutline = !data.mRawColor.empty() || data.mLineStyle == LineStyle::Dashed;
+        if (drawOutline) {
+            const FLOAT outlineWidth = data.mStrokeWidth > 0.0f
+                ? data.mStrokeWidth
+                : (data.mLineStyle == LineStyle::Dashed ? 2.5f : 1.0f);
+
+            Microsoft::WRL::ComPtr<ID2D1StrokeStyle> outlineDashedStyle;
+            ID2D1StrokeStyle *outlineStrokeStyle = nullptr;
+            if (data.mLineStyle == LineStyle::Dashed && mD2DFactory) {
+                const FLOAT dashLen = data.mDashLength > 0.0f ? data.mDashLength : 10.0f;
+                const FLOAT gapLen = data.mGapLength > 0.0f ? data.mGapLength : 6.0f;
+                const D2D1_STROKE_STYLE_PROPERTIES dashProps = D2D1::StrokeStyleProperties(
+                    D2D1_CAP_STYLE_FLAT,
+                    D2D1_CAP_STYLE_FLAT,
+                    D2D1_CAP_STYLE_FLAT,
+                    D2D1_LINE_JOIN_MITER,
+                    10.0f,
+                    D2D1_DASH_STYLE_CUSTOM,
+                    0.0f
+                );
+                const FLOAT dashArray[] = {dashLen, gapLen};
+                if (SUCCEEDED(mD2DFactory->CreateStrokeStyle(dashProps, dashArray, 2, outlineDashedStyle.GetAddressOf()))) {
+                    outlineStrokeStyle = outlineDashedStyle.Get();
+                }
+            }
             Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> strokeBrush;
             if (SUCCEEDED(mDCRenderTarget->CreateSolidColorBrush(data.mColor.d2dColor, strokeBrush.GetAddressOf()))) {
-                mDCRenderTarget->DrawGeometry(geometry.Get(), strokeBrush.Get(), 1.0f);
+                mDCRenderTarget->DrawGeometry(geometry.Get(), strokeBrush.Get(), outlineWidth, outlineStrokeStyle);
             }
         }
 
         end();
     }
 
-    void Direct2DRender::drawText(HDC hdc, const POINT &pt, const RenderData &data) {
+    void Direct2DRender::drawText(HDC hdc, const POINT &pt, const RenderData &data,
+                                  float effectiveFontSizePixels) {
         if (data.mText.empty()) return;
         if (FAILED(begin(hdc))) return;
 
+        const FLOAT baseSize = data.mFontSize > 0 ? static_cast<FLOAT>(data.mFontSize) : 12.0f;
+        const FLOAT fontSize = effectiveFontSizePixels > 0.0f ? effectiveFontSizePixels : baseSize;
+
         Microsoft::WRL::ComPtr<IDWriteTextFormat> format;
-        const FLOAT fontSize = data.mFontSize > 0 ? static_cast<FLOAT>(data.mFontSize) : 12.0f;
         if (SUCCEEDED(mDWriteFactory->CreateTextFormat(
             L"Euroscope",
             nullptr,

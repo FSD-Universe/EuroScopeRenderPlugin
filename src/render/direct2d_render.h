@@ -21,7 +21,8 @@ namespace RenderPlugin {
 
         void drawArea(HDC hdc, const std::vector<POINT> &points, const RenderData &data) override;
 
-        void drawText(HDC hdc, const POINT &pt, const RenderData &data) override;
+        void drawText(HDC hdc, const POINT &pt, const RenderData &data,
+                     float effectiveFontSizePixels = 0.0f) override;
 
     private:
         bool mComInitialized{false};
@@ -31,7 +32,6 @@ namespace RenderPlugin {
         Microsoft::WRL::ComPtr<ID2D1DCRenderTarget> mDCRenderTarget;
 
         HRESULT ensureDeviceResources();
-
         HRESULT begin(HDC hdc);
 
         void end();

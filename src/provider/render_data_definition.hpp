@@ -4,6 +4,7 @@
 #ifndef RENDERPLUGIN_RENDER_DATA_DEFINE_H
 #define RENDERPLUGIN_RENDER_DATA_DEFINE_H
 
+#include <cctype>
 #include <d2d1.h>
 #include <gdiplus.h>
 #include <map>
@@ -131,6 +132,31 @@ namespace RenderPlugin {
         return RenderType::AREA;
     }
 
+    enum class LineStyle {
+        Solid,
+        Dashed
+    };
+
+    constexpr auto LINE_STYLE_SOLID = "solid";
+    constexpr auto LINE_STYLE_DASHED = "dashed";
+
+    inline std::string lineStyleToString(LineStyle style) {
+        return style == LineStyle::Dashed ? LINE_STYLE_DASHED : LINE_STYLE_SOLID;
+    }
+
+    inline LineStyle stringToLineStyle(const std::string &str) {
+        if (str.empty()) return LineStyle::Solid;
+        std::string lower;
+        lower.reserve(str.size());
+        for (unsigned char c : str) {
+            lower.push_back(static_cast<char>(std::tolower(c)));
+        }
+        if (lower == LINE_STYLE_DASHED) {
+            return LineStyle::Dashed;
+        }
+        return LineStyle::Solid;
+    }
+
     struct RenderData {
         RenderType mType{RenderType::AREA};
         Coordinates mCoordinates{};
@@ -141,6 +167,10 @@ namespace RenderPlugin {
         std::wstring mText{}; // text content
         int mFontSize{}; // text font size
         int mZoom{}; // zoom level, when current zoom level is less than this value, the render data will be ignored
+        LineStyle mLineStyle{LineStyle::Solid}; // line style for LINE type (solid / dashed)
+        float mStrokeWidth{0.0f};   // line/outline width, 0 = use default (1.0 solid, 2.0 dashed)
+        float mDashLength{0.0f};   // dashed: dash segment length, 0 = use default (10.0)
+        float mGapLength{0.0f};     // dashed: gap segment length, 0 = use default (6.0)
 
         RenderData() = default;
 
@@ -154,13 +184,17 @@ namespace RenderPlugin {
                                                     mColor(instance.mColor),
                                                     mText(std::move(instance.mText)),
                                                     mFontSize(instance.mFontSize),
-                                                    mZoom(instance.mZoom) {};
+                                                    mZoom(instance.mZoom),
+                                                    mLineStyle(instance.mLineStyle),
+                                                    mStrokeWidth(instance.mStrokeWidth),
+                                                    mDashLength(instance.mDashLength),
+                                                    mGapLength(instance.mGapLength) {};
     };
 
     using ColorMap = std::map<std::string, Color>;
     using RenderDataVector = std::vector<RenderData>;
-    constexpr const char *COLOR_KEY = "color";
-    constexpr const char *FEATURE_KEY = "features";
+    constexpr auto COLOR_KEY = "color";
+    constexpr auto FEATURE_KEY = "features";
 }
 
 #endif

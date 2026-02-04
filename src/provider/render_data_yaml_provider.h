@@ -61,6 +61,12 @@ namespace YAML {
                 node["size"] = rhs.mFontSize;
             }
             node["zoom"] = rhs.mZoom;
+            node["stroke"] = RenderPlugin::lineStyleToString(rhs.mLineStyle);
+            if (rhs.mStrokeWidth > 0.0f) node["strokeWidth"] = rhs.mStrokeWidth;
+            if (rhs.mDashLength > 0.0f || rhs.mGapLength > 0.0f) {
+                node["dashLength"] = rhs.mDashLength;
+                node["gapLength"] = rhs.mGapLength;
+            }
             return node;
         }
 
@@ -84,6 +90,24 @@ namespace YAML {
             }
             if (node["zoom"]) {
                 rhs.mZoom = node["zoom"].as<int>();
+            }
+            if (node["stroke"]) {
+                rhs.mLineStyle = RenderPlugin::stringToLineStyle(node["stroke"].as<std::string>());
+            } else if (node["lineStyle"]) {
+                rhs.mLineStyle = RenderPlugin::stringToLineStyle(node["lineStyle"].as<std::string>());
+            }
+            if (node["strokeWidth"]) {
+                rhs.mStrokeWidth = node["strokeWidth"].as<float>();
+            }
+            if (node["dash"]) {
+                auto dash = node["dash"];
+                if (dash.IsSequence() && dash.size() >= 2) {
+                    rhs.mDashLength = dash[0].as<float>();
+                    rhs.mGapLength = dash[1].as<float>();
+                }
+            } else {
+                if (node["dashLength"]) rhs.mDashLength = node["dashLength"].as<float>();
+                if (node["gapLength"]) rhs.mGapLength = node["gapLength"].as<float>();
             }
             return true;
         }

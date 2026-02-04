@@ -25,6 +25,7 @@ namespace RenderPlugin {
         }
 
         const int currentZoom = getCurrentZoomLevel();
+        const double currentSpanDeg = getCurrentSpanDeg();
 
         for (const auto &data: *renderData) {
             // 当当前缩放等级小于要素配置的 mZoom 时，不绘制该要素
@@ -39,7 +40,7 @@ namespace RenderPlugin {
                     drawArea(hDC, data);
                     break;
                 case RenderType::TEXT:
-                    drawText(hDC, data);
+                    drawText(hDC, data, currentSpanDeg);
                     break;
             }
         }
@@ -65,6 +66,20 @@ namespace RenderPlugin {
         int zoom = static_cast<int>(std::round(rawZoom));
         zoom = std::clamp(zoom, 1, 19);
         return zoom;
+    }
+
+    double RadarRender::getCurrentSpanDeg() {
+        EuroScopePlugIn::CPosition leftDown{};
+        EuroScopePlugIn::CPosition rightUp{};
+        GetDisplayArea(&leftDown, &rightUp);
+
+        const double spanLon = rightUp.m_Longitude - leftDown.m_Longitude;
+        const double spanLat = rightUp.m_Latitude - leftDown.m_Latitude;
+        double spanDeg = (std::max)(std::abs(spanLon), std::abs(spanLat));
+        if (spanDeg <= std::numeric_limits<double>::epsilon()) {
+            spanDeg = 360.0 / 1024.0;
+        }
+        return spanDeg;
     }
 
     void RadarRender::drawLine(HDC hDC, const RenderData &data) {
@@ -95,7 +110,7 @@ namespace RenderPlugin {
         mRender->drawArea(hDC, points, data);
     }
 
-    void RadarRender::drawText(HDC hDC, const RenderData &data) {
+    void RadarRender::drawText(HDC hDC, const RenderData &data, double spanDeg) {
         if (data.mCoordinates.empty() || data.mText.empty()) {
             return;
         }
@@ -103,7 +118,14 @@ namespace RenderPlugin {
         const auto &coord = data.mCoordinates[0];
         POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
 
-        mRender->drawText(hDC, pt, data);
+        // 用连续的比例（视野跨度）缩放字体，避免按整数 zoom 时字体跳变
+        // 参考：spanDeg = 360/1024 时缩放系数为 1（对应约 zoom 10）
+        constexpr double referenceSpanDeg = 360.0 / 1024.0;
+        const float baseSize = data.mFontSize > 0 ? static_cast<float>(data.mFontSize) : 12.0f;
+        const float scaleFactor = static_cast<float>(referenceSpanDeg / spanDeg);
+        const float effectiveFontSize = baseSize * scaleFactor;
+
+        mRender->drawText(hDC, pt, data, effectiveFontSize);
     }
 
     void RadarRender::OnAsrContentToBeClosed() {}
