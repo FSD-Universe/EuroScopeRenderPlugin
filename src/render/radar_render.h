@@ -18,7 +18,7 @@ namespace RenderPlugin {
         using OnClosedCallback = std::function<void(RadarRender *)>;
 
         RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render,
-                    OnClosedCallback onClosed = nullptr);
+                    OnClosedCallback onClosed = nullptr, int textSizeReferenceZoom = 12);
 
         virtual ~RadarRender();
 
@@ -40,6 +40,7 @@ namespace RenderPlugin {
         RenderPtr mRender;
         std::shared_ptr<Logger> mLogger;
         OnClosedCallback mOnClosedCallback;
+        int mTextSizeReferenceZoom{12}; // 文字 size 参考缩放等级（1–19），该 zoom 下 size 即参考像素
 
         void drawLine(HDC hDC, const RenderData &data);
 

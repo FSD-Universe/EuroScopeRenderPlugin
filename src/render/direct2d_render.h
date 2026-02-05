@@ -24,6 +24,9 @@ namespace RenderPlugin {
         void drawText(HDC hdc, const POINT &pt, const RenderData &data,
                      float effectiveFontSizePixels = 0.0f) override;
 
+        bool beginFrame(HDC hdc) override;
+        void endFrame() override;
+
     private:
         bool mComInitialized{false};
 

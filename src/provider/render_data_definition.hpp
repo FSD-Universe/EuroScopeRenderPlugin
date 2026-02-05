@@ -203,6 +203,11 @@ namespace RenderPlugin {
         std::wstring mText{}; // text content, supports multi-line with \n
         int mFontSize{}; // text font size
         TextAnchor mTextAnchor{TextAnchor::TopLeft}; // text control point: topLeft | center | topRight
+        std::string mRawTextBackground{}; // text background color (name or #RRGGBB), empty = no background
+        Color mTextBackground{}; // resolved text background color
+        std::string mRawTextBackgroundStroke{}; // text background box border color, empty = no stroke
+        Color mTextBackgroundStroke{}; // resolved text background stroke color
+        float mTextBackgroundStrokeWidth{2.0f}; // text background box border width (px), default 2
         int mZoom{}; // zoom level, when current zoom level is less than this value, the render data will be ignored
         LineStyle mLineStyle{LineStyle::Solid}; // line style for LINE type (solid / dashed)
         float mStrokeWidth{0.0f};   // line/outline width, 0 = use default (1.0 solid, 2.0 dashed)
@@ -222,6 +227,11 @@ namespace RenderPlugin {
                                                     mText(std::move(instance.mText)),
                                                     mFontSize(instance.mFontSize),
                                                     mTextAnchor(instance.mTextAnchor),
+                                                    mRawTextBackground(std::move(instance.mRawTextBackground)),
+                                                    mTextBackground(instance.mTextBackground),
+                                                    mRawTextBackgroundStroke(std::move(instance.mRawTextBackgroundStroke)),
+                                                    mTextBackgroundStroke(instance.mTextBackgroundStroke),
+                                                    mTextBackgroundStrokeWidth(instance.mTextBackgroundStrokeWidth),
                                                     mZoom(instance.mZoom),
                                                     mLineStyle(instance.mLineStyle),
                                                     mStrokeWidth(instance.mStrokeWidth),

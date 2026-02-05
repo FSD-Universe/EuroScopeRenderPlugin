@@ -194,3 +194,15 @@ features:
     textAnchor: topLeft
     color: gray
     zoom: 0
+
+  # 文字背景 + 背景框描边
+  - type: text
+    coordinates:
+      - [116.42, 39.92]
+    text: "背景+描边"
+    size: 12
+    color: black
+    textBackground: "#FFFFCC"
+    textBackgroundStroke: "#666666"
+    textAnchor: center
+    zoom: 10

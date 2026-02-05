@@ -84,7 +84,8 @@ namespace RenderPlugin {
                                                 bool CanBeCreated) {
         removeClosedRadarScreens();
         mLogger->debugf("OnRadarScreenCreated: displayName = {}", sDisplayName);
-        mRadarScreens.push_back(std::make_unique<RadarRender>(mLogger, mDataProvider, mRender, nullptr));
+        mRadarScreens.push_back(std::make_unique<RadarRender>(mLogger, mDataProvider, mRender, nullptr,
+                                                             mConfig->mTextSizeReferenceZoom));
         RadarRender *screen = mRadarScreens.back().get();
         screen->setOnClosedCallback([this](RadarRender *p) { notifyRadarScreenClosed(p); });
         return screen;
@@ -129,6 +130,14 @@ namespace RenderPlugin {
 
         std::string renderType = getConfigOrDefault(SETTING_RENDER_TYPE, DEFAULT_RENDER_TYPE);
         mConfig->mRenderType = PluginConfig::getRenderType(renderType);
+
+        std::string refZoomStr = getConfigOrDefault(SETTING_TEXT_SIZE_REFERENCE_ZOOM, DEFAULT_TEXT_SIZE_REFERENCE_ZOOM);
+        try {
+            int z = std::stoi(refZoomStr);
+            mConfig->mTextSizeReferenceZoom = std::clamp(z, 1, 19);
+        } catch (...) {
+            mConfig->mTextSizeReferenceZoom = 12;
+        }
     }
 
     std::string EuroScopeRenderPlugin::getConfigOrDefault(const std::string &key, const std::string &defaultValue) {

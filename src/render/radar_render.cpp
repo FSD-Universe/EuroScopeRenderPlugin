@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Half_nothing
 // SPDX-License-Identifier: MIT
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <limits>
@@ -11,8 +12,9 @@
 
 namespace RenderPlugin {
     RadarRender::RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render,
-                             OnClosedCallback onClosed)
-            : mDataProvider(std::move(dataProvider)), mRender(std::move(render)), mLogger(std::move(logger)), mOnClosedCallback(std::move(onClosed)) {}
+                             OnClosedCallback onClosed, int textSizeReferenceZoom)
+            : mDataProvider(std::move(dataProvider)), mRender(std::move(render)), mLogger(std::move(logger)),
+              mOnClosedCallback(std::move(onClosed)), mTextSizeReferenceZoom(std::clamp(textSizeReferenceZoom, 1, 19)) {}
 
     RadarRender::~RadarRender() = default;
 
@@ -34,6 +36,9 @@ namespace RenderPlugin {
             clipRect = {0, 0, 4096, 4096};
         }
 
+        if (!mRender->beginFrame(hDC)) {
+            return;
+        }
         for (const auto &data: *renderData) {
             // 当当前缩放等级小于要素配置的 mZoom 时，不绘制该要素
             if (currentZoom < data.mZoom) {
@@ -55,6 +60,7 @@ namespace RenderPlugin {
                     break;
             }
         }
+        mRender->endFrame();
     }
 
     int RadarRender::getCurrentZoomLevel() {
@@ -144,8 +150,8 @@ namespace RenderPlugin {
         POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
 
         // 用连续的比例（视野跨度）缩放字体，避免按整数 zoom 时字体跳变
-        // 参考：spanDeg = 360/1024 时缩放系数为 1（对应约 zoom 10）
-        constexpr double referenceSpanDeg = 360.0 / 1024.0;
+        // 参考 zoom 由设置 TextSizeReferenceZoom 决定，该 zoom 下 size 即参考像素
+        const double referenceSpanDeg = 360.0 / std::pow(2.0, mTextSizeReferenceZoom);
         const float baseSize = data.mFontSize > 0 ? static_cast<float>(data.mFontSize) : 12.0f;
         const float scaleFactor = static_cast<float>(referenceSpanDeg / spanDeg);
         const float effectiveFontSize = baseSize * scaleFactor;

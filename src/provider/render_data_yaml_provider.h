@@ -63,6 +63,15 @@ namespace YAML {
             if (rhs.mTextAnchor != RenderPlugin::TextAnchor::TopLeft) {
                 node["textAnchor"] = RenderPlugin::textAnchorToString(rhs.mTextAnchor);
             }
+            if (!rhs.mRawTextBackground.empty()) {
+                node["textBackground"] = rhs.mRawTextBackground;
+            }
+            if (!rhs.mRawTextBackgroundStroke.empty()) {
+                node["textBackgroundStroke"] = rhs.mRawTextBackgroundStroke;
+            }
+            if (rhs.mTextBackgroundStrokeWidth != 2.0f) {
+                node["textBackgroundStrokeWidth"] = rhs.mTextBackgroundStrokeWidth;
+            }
             node["zoom"] = rhs.mZoom;
             node["stroke"] = RenderPlugin::lineStyleToString(rhs.mLineStyle);
             if (rhs.mStrokeWidth > 0.0f) node["strokeWidth"] = rhs.mStrokeWidth;
@@ -93,6 +102,15 @@ namespace YAML {
             }
             if (node["textAnchor"]) {
                 rhs.mTextAnchor = RenderPlugin::stringToTextAnchor(node["textAnchor"].as<std::string>());
+            }
+            if (node["textBackground"]) {
+                rhs.mRawTextBackground = node["textBackground"].as<std::string>();
+            }
+            if (node["textBackgroundStroke"]) {
+                rhs.mRawTextBackgroundStroke = node["textBackgroundStroke"].as<std::string>();
+            }
+            if (node["textBackgroundStrokeWidth"]) {
+                rhs.mTextBackgroundStrokeWidth = node["textBackgroundStrokeWidth"].as<float>();
             }
             if (node["zoom"]) {
                 rhs.mZoom = node["zoom"].as<int>();

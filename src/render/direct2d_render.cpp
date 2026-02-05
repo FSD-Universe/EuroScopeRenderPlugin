@@ -20,12 +20,9 @@ namespace RenderPlugin {
     }
 
     Direct2DRender::Direct2DRender() {
-        const HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (SUCCEEDED(hr)) {
-            mComInitialized = true;
-        } else if (hr == RPC_E_CHANGED_MODE) {
-            mComInitialized = false;
-        }
+        // 插件在 EuroScope 主线程加载，宿主通常已初始化 COM(STA)。此处不再调用 CoInitializeEx，
+        // 避免与主线程公寓模式冲突导致卡顿或未响应；D2D/DWrite 使用进程内已有 COM 状态。
+        mComInitialized = false;
     }
 
     Direct2DRender::~Direct2DRender() {
@@ -98,9 +95,16 @@ namespace RenderPlugin {
         }
     }
 
+    bool Direct2DRender::beginFrame(HDC hdc) {
+        return SUCCEEDED(begin(hdc));
+    }
+
+    void Direct2DRender::endFrame() {
+        end();
+    }
+
     void Direct2DRender::drawLine(HDC hdc, const std::vector<POINT> &points, const RenderData &data) {
         if (points.size() < 2) return;
-        if (FAILED(begin(hdc))) return;
 
         const FLOAT strokeWidth = data.mStrokeWidth > 0.0f
             ? data.mStrokeWidth
@@ -140,23 +144,18 @@ namespace RenderPlugin {
                 );
             }
         }
-
-        end();
     }
 
     void Direct2DRender::drawArea(HDC hdc, const std::vector<POINT> &points, const RenderData &data) {
         if (points.size() < 3) return;
-        if (FAILED(begin(hdc))) return;
 
         Microsoft::WRL::ComPtr<ID2D1PathGeometry> geometry;
         if (FAILED(mD2DFactory->CreatePathGeometry(geometry.GetAddressOf()))) {
-            end();
             return;
         }
 
         Microsoft::WRL::ComPtr<ID2D1GeometrySink> sink;
         if (FAILED(geometry->Open(sink.GetAddressOf()))) {
-            end();
             return;
         }
 
@@ -212,14 +211,11 @@ namespace RenderPlugin {
                 mDCRenderTarget->DrawGeometry(geometry.Get(), strokeBrush.Get(), outlineWidth, outlineStrokeStyle);
             }
         }
-
-        end();
     }
 
     void Direct2DRender::drawText(HDC hdc, const POINT &pt, const RenderData &data,
                                   float effectiveFontSizePixels) {
         if (data.mText.empty()) return;
-        if (FAILED(begin(hdc))) return;
 
         const FLOAT baseSize = data.mFontSize > 0 ? static_cast<FLOAT>(data.mFontSize) : 12.0f;
         const FLOAT fontSize = effectiveFontSizePixels > 0.0f ? effectiveFontSizePixels : baseSize;
@@ -236,7 +232,6 @@ namespace RenderPlugin {
             L"",
             measureFormat.GetAddressOf()
         ))) {
-            end();
             return;
         }
         measureFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -253,12 +248,10 @@ namespace RenderPlugin {
             maxLayoutSize,
             measureLayout.GetAddressOf()
         ))) {
-            end();
             return;
         }
         DWRITE_TEXT_METRICS measureMetrics{};
         if (FAILED(measureLayout->GetMetrics(&measureMetrics))) {
-            end();
             return;
         }
         const FLOAT contentWidth = measureMetrics.width;
@@ -287,7 +280,6 @@ namespace RenderPlugin {
             L"",
             format.GetAddressOf()
         ))) {
-            end();
             return;
         }
         format->SetTextAlignment(alignment);
@@ -306,7 +298,6 @@ namespace RenderPlugin {
             drawLayoutHeight,
             textLayout.GetAddressOf()
         ))) {
-            end();
             return;
         }
 
@@ -323,12 +314,32 @@ namespace RenderPlugin {
         }
         const D2D1_POINT_2F origin = D2D1::Point2F(originX, static_cast<FLOAT>(pt.y));
 
+        // 可选：先绘制文字背景矩形（带少量内边距）及背景框描边
+        constexpr FLOAT textBackgroundPadding = 2.0f;
+        const D2D1_RECT_F bgRect = D2D1::RectF(
+            originX - textBackgroundPadding,
+            static_cast<FLOAT>(pt.y),
+            originX + contentWidth + textBackgroundPadding,
+            static_cast<FLOAT>(pt.y) + contentHeight + textBackgroundPadding
+        );
+        if (!data.mRawTextBackground.empty()) {
+            Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> bgBrush;
+            if (SUCCEEDED(mDCRenderTarget->CreateSolidColorBrush(data.mTextBackground.d2dColor, bgBrush.GetAddressOf()))) {
+                mDCRenderTarget->FillRectangle(bgRect, bgBrush.Get());
+            }
+        }
+        if (!data.mRawTextBackgroundStroke.empty()) {
+            Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> strokeBrush;
+            const FLOAT strokeW = data.mTextBackgroundStrokeWidth > 0.0f ? data.mTextBackgroundStrokeWidth : 2.0f;
+            if (SUCCEEDED(mDCRenderTarget->CreateSolidColorBrush(data.mTextBackgroundStroke.d2dColor, strokeBrush.GetAddressOf()))) {
+                mDCRenderTarget->DrawRectangle(bgRect, strokeBrush.Get(), strokeW);
+            }
+        }
+
         Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;
         if (SUCCEEDED(mDCRenderTarget->CreateSolidColorBrush(data.mColor.d2dColor, brush.GetAddressOf()))) {
             mDCRenderTarget->DrawTextLayout(origin, textLayout.Get(), brush.Get(),
                 D2D1_DRAW_TEXT_OPTIONS_NO_SNAP);
         }
-
-        end();
     }
 }

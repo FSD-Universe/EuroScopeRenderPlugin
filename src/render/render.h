@@ -14,6 +14,12 @@ namespace RenderPlugin {
 
         virtual ~Render() = default;
 
+        /** 开始一帧绘制（可选）。Direct2D 在此绑定 DC 并 BeginDraw，每帧只调用一次。返回 false 时本帧不绘制。 */
+        virtual bool beginFrame(HDC hdc) { return true; }
+
+        /** 结束一帧绘制（可选）。Direct2D 在此 EndDraw。 */
+        virtual void endFrame() {}
+
         virtual void drawLine(HDC hdc, const std::vector<POINT> &points, const RenderData &data) = 0;
 
         virtual void drawArea(HDC hdc, const std::vector<POINT> &points, const RenderData &data) = 0;

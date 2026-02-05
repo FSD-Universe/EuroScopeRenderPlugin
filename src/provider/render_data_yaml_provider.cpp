@@ -42,6 +42,12 @@ namespace RenderPlugin {
             }
             element.mFill = this->processColorField(element.mRawFill);
             element.mColor = this->processColorField(element.mRawColor);
+            if (!element.mRawTextBackground.empty()) {
+                element.mTextBackground = this->processColorField(element.mRawTextBackground);
+            }
+            if (!element.mRawTextBackgroundStroke.empty()) {
+                element.mTextBackgroundStroke = this->processColorField(element.mRawTextBackgroundStroke);
+            }
         }
 
         mIsLoaded = true;

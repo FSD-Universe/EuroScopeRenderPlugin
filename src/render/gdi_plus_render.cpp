@@ -117,6 +117,25 @@ namespace RenderPlugin {
                 break;
         }
         const RectF drawRect(left, static_cast<float>(pt.y), boundingBox.Width, boundingBox.Height);
+
+        // 可选：先绘制文字背景矩形（带少量内边距）及背景框描边
+        constexpr float textBackgroundPadding = 2.0f;
+        const RectF bgRect(
+            left - textBackgroundPadding,
+            static_cast<float>(pt.y),
+            boundingBox.Width + textBackgroundPadding * 2.0f,
+            boundingBox.Height + textBackgroundPadding
+        );
+        if (!data.mRawTextBackground.empty()) {
+            SolidBrush bgBrush(data.mTextBackground.gdiColor);
+            graphics.FillRectangle(&bgBrush, bgRect);
+        }
+        if (!data.mRawTextBackgroundStroke.empty()) {
+            const float strokeW = data.mTextBackgroundStrokeWidth > 0.0f ? data.mTextBackgroundStrokeWidth : 2.0f;
+            Pen strokePen(data.mTextBackgroundStroke.gdiColor, strokeW);
+            graphics.DrawRectangle(&strokePen, bgRect);
+        }
+
         graphics.DrawString(data.mText.c_str(), -1, &font, drawRect, &format, &brush);
     }
 }
