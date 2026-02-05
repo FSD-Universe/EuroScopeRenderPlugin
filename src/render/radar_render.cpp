@@ -5,14 +5,16 @@
 #include <filesystem>
 #include <limits>
 #include <sstream>
+#include <utility>
 
 #include "radar_render.h"
 
 namespace RenderPlugin {
-    RadarRender::RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render)
-            : mDataProvider(dataProvider), mRender(render), mLogger(logger) {}
+    RadarRender::RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render,
+                             OnClosedCallback onClosed)
+            : mDataProvider(std::move(dataProvider)), mRender(std::move(render)), mLogger(std::move(logger)), mOnClosedCallback(std::move(onClosed)) {}
 
-    RadarRender::~RadarRender() {}
+    RadarRender::~RadarRender() = default;
 
     void RadarRender::OnRefresh(HDC hDC, int Phase) {
         if (!mDataProvider->isLoaded() || Phase != EuroScopePlugIn::REFRESH_PHASE_BACK_BITMAP) {
@@ -27,9 +29,18 @@ namespace RenderPlugin {
         const int currentZoom = getCurrentZoomLevel();
         const double currentSpanDeg = getCurrentSpanDeg();
 
+        RECT clipRect{};
+        if (GetClipBox(hDC, &clipRect) == ERROR) {
+            clipRect = {0, 0, 4096, 4096};
+        }
+
         for (const auto &data: *renderData) {
             // 当当前缩放等级小于要素配置的 mZoom 时，不绘制该要素
             if (currentZoom < data.mZoom) {
+                continue;
+            }
+            // 当所有点都不在屏幕内时，跳过该要素
+            if (!isAnyPointInClip(data, clipRect)) {
                 continue;
             }
             switch (data.mType) {
@@ -66,6 +77,20 @@ namespace RenderPlugin {
         int zoom = static_cast<int>(std::round(rawZoom));
         zoom = std::clamp(zoom, 1, 19);
         return zoom;
+    }
+
+    bool RadarRender::isAnyPointInClip(const RenderData &data, const RECT &clipRect) {
+        if (data.mCoordinates.empty()) {
+            return false;
+        }
+        for (const auto &coord: data.mCoordinates) {
+            POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
+            if (pt.x >= clipRect.left && pt.x <= clipRect.right &&
+                pt.y >= clipRect.top && pt.y <= clipRect.bottom) {
+                return true;
+            }
+        }
+        return false;
     }
 
     double RadarRender::getCurrentSpanDeg() {
@@ -128,5 +153,9 @@ namespace RenderPlugin {
         mRender->drawText(hDC, pt, data, effectiveFontSize);
     }
 
-    void RadarRender::OnAsrContentToBeClosed() {}
+    void RadarRender::OnAsrContentToBeClosed() {
+        if (mOnClosedCallback) {
+            mOnClosedCallback(this);
+        }
+    }
 }

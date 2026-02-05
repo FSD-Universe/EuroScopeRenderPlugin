@@ -4,6 +4,7 @@
 #ifndef RENDERPLUGIN_EUROSCOPE_RENDER_PLUGIN_H
 #define RENDERPLUGIN_EUROSCOPE_RENDER_PLUGIN_H
 
+#include <vector>
 #include "EuroScopePlugIn.h"
 #include "euroscope_render_definition.h"
 #include "render_data_provider.h"
@@ -52,14 +53,19 @@ namespace RenderPlugin {
 
         virtual bool OnCompileCommand(const char *sCommandLine) override;
 
+        /** 由 RadarRender 在 OnAsrContentToBeClosed 时调用，用于延迟移除已关闭的屏幕 */
+        void notifyRadarScreenClosed(RadarRender *screen);
+
     private:
         fs::path mDllPath;
         std::shared_ptr<Logger> mLogger;
         std::shared_ptr<PluginConfig> mConfig;
         RenderPtr mRender;
         ProviderPtr mDataProvider;
-        std::unique_ptr<RadarRender> mRadarScreen;
+        std::vector<std::unique_ptr<RadarRender>> mRadarScreens;
+        std::vector<RadarRender *> mRadarScreensToRemove;
 
+        void removeClosedRadarScreens();
         void readConfig();
 
         std::string getConfigOrDefault(const std::string &key, const std::string &defaultValue);

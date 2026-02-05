@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Half_nothing
 // SPDX-License-Identifier: MIT
 
+#include <algorithm>
 #include <memory>
 
 #include "euroscope_render_plugin.h"
@@ -37,15 +38,12 @@ namespace RenderPlugin {
             mRender = std::make_shared<GDIPlusRender>();
         }
         mLogger->debug("Render initialized");
-        mRadarScreen = std::make_unique<RadarRender>(mLogger, mDataProvider, mRender);
-        mLogger->debug("Radar screen initialized");
         mLogger->debug("Plugin initialized");
     }
 
     EuroScopeRenderPlugin::~EuroScopeRenderPlugin() {
-        if (mRadarScreen != nullptr) {
-            mRadarScreen.reset();
-        }
+        mRadarScreensToRemove.clear();
+        mRadarScreens.clear();
         if (mRender != nullptr) {
             mRender.reset();
         }
@@ -60,13 +58,36 @@ namespace RenderPlugin {
         }
     }
 
+    void EuroScopeRenderPlugin::removeClosedRadarScreens() {
+        if (mRadarScreensToRemove.empty()) return;
+        auto it = std::remove_if(mRadarScreens.begin(), mRadarScreens.end(),
+                                 [this](const std::unique_ptr<RadarRender> &p) {
+                                     return std::find(mRadarScreensToRemove.begin(), mRadarScreensToRemove.end(),
+                                                      p.get())
+                                            != mRadarScreensToRemove.end();
+                                 });
+        mRadarScreens.erase(it, mRadarScreens.end());
+        mRadarScreensToRemove.clear();
+    }
+
+    void EuroScopeRenderPlugin::notifyRadarScreenClosed(RadarRender *screen) {
+        if (screen != nullptr) {
+            mRadarScreensToRemove.push_back(screen);
+        }
+    }
+
     EuroScopePlugIn::CRadarScreen *
     EuroScopeRenderPlugin::OnRadarScreenCreated(const char *sDisplayName,
                                                 bool NeedRadarContent,
                                                 bool GeoReferenced,
                                                 bool CanBeSaved,
                                                 bool CanBeCreated) {
-        return mRadarScreen.get();
+        removeClosedRadarScreens();
+        mLogger->debugf("OnRadarScreenCreated: displayName = {}", sDisplayName);
+        mRadarScreens.push_back(std::make_unique<RadarRender>(mLogger, mDataProvider, mRender, nullptr));
+        RadarRender *screen = mRadarScreens.back().get();
+        screen->setOnClosedCallback([this](RadarRender *p) { notifyRadarScreenClosed(p); });
+        return screen;
     }
 
     bool EuroScopeRenderPlugin::OnCompileCommand(const char *sCommandLine) {
@@ -83,8 +104,14 @@ namespace RenderPlugin {
             return true;
         }
         if (command == ".zoom") {
-            std::string message = fmt::format("Current zoom level: {}", mRadarScreen->getCurrentZoomLevel());
-            displayMessage(DisplayMessage::newDebugMessage(message));
+            removeClosedRadarScreens();
+            if (mRadarScreens.empty()) {
+                displayMessage(DisplayMessage::newDebugMessage("No radar screen open"));
+            } else {
+                std::string message = fmt::format("Current zoom level: {} ({} screen(s))",
+                                                  mRadarScreens.front()->getCurrentZoomLevel(), mRadarScreens.size());
+                displayMessage(DisplayMessage::newDebugMessage(message));
+            }
             return true;
         }
         return false;
