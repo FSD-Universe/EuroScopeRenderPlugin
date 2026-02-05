@@ -30,8 +30,11 @@ namespace RenderPlugin {
         /** 当前视野的经纬度跨度（度），用于连续缩放文字等 */
         double getCurrentSpanDeg();
 
-        /** 判断要素是否至少有一个坐标点在裁剪区内（屏幕内） */
+        /** 判断要素是否至少有一个坐标点在裁剪区内（屏幕内），用于线段和文字 */
         bool isAnyPointInClip(const RenderData &data, const RECT &clipRect);
+
+        /** 判断多边形区域是否与裁剪区相交（顶点可在屏幕外，区域经过屏幕即返回 true），用于区域 */
+        bool isAreaIntersectingClip(const RenderData &data, const RECT &clipRect);
 
         void setOnClosedCallback(OnClosedCallback callback) { mOnClosedCallback = std::move(callback); }
 

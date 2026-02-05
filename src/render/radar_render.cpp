@@ -9,6 +9,61 @@
 #include <utility>
 
 #include "radar_render.h"
+#include "render_data_definition.hpp"
+
+namespace {
+
+    bool pointInRect(const POINT &p, const RECT &r) {
+        return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+    }
+
+    bool segmentsIntersect(const POINT &a, const POINT &b, const POINT &c, const POINT &d) {
+        auto orient = [](const POINT &p, const POINT &q, const POINT &r) {
+            return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+        };
+        long o1 = orient(a, b, c), o2 = orient(a, b, d), o3 = orient(c, d, a), o4 = orient(c, d, b);
+        if (o1 * o2 > 0 || o3 * o4 > 0) {
+            return false;
+        }
+        if (o1 == 0 && o2 == 0) {
+            return (std::min)(a.x, b.x) <= (std::max)(c.x, d.x) && (std::max)(a.x, b.x) >= (std::min)(c.x, d.x) &&
+                   (std::min)(a.y, b.y) <= (std::max)(c.y, d.y) && (std::max)(a.y, b.y) >= (std::min)(c.y, d.y);
+        }
+        return true;
+    }
+
+    bool segmentIntersectsRect(const POINT &a, const POINT &b, const RECT &r) {
+        if (pointInRect(a, r) || pointInRect(b, r)) {
+            return true;
+        }
+        POINT tl = {r.left, r.top};
+        POINT tr = {r.right, r.top};
+        POINT br = {r.right, r.bottom};
+        POINT bl = {r.left, r.bottom};
+        return segmentsIntersect(a, b, tl, tr) || segmentsIntersect(a, b, tr, br) ||
+               segmentsIntersect(a, b, br, bl) || segmentsIntersect(a, b, bl, tl);
+    }
+
+    bool pointInPolygon(const POINT &p, const std::vector<POINT> &pts) {
+        if (pts.size() < 3) {
+            return false;
+        }
+        int n = static_cast<int>(pts.size());
+        int crossings = 0;
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            const auto &vi = pts[i];
+            const auto &vj = pts[j];
+            if ((vi.y > p.y) == (vj.y > p.y)) {
+                continue;
+            }
+            double tx = (p.y - vj.y) * (vi.x - vj.x) / (vi.y - vj.y) + vj.x;
+            if (static_cast<double>(p.x) < tx) {
+                ++crossings;
+            }
+        }
+        return (crossings % 2) == 1;
+    }
+} // namespace
 
 namespace RenderPlugin {
     RadarRender::RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render,
@@ -44,8 +99,11 @@ namespace RenderPlugin {
             if (currentZoom < data.mZoom) {
                 continue;
             }
-            // 当所有点都不在屏幕内时，跳过该要素
-            if (!isAnyPointInClip(data, clipRect)) {
+            // 线段/文字：至少有一个点在屏幕内才渲染；区域：多边形与屏幕相交即渲染（顶点可在屏幕外）
+            bool visible = (data.mType == RenderType::AREA)
+                                  ? isAreaIntersectingClip(data, clipRect)
+                                  : isAnyPointInClip(data, clipRect);
+            if (!visible) {
                 continue;
             }
             switch (data.mType) {
@@ -97,6 +155,30 @@ namespace RenderPlugin {
             }
         }
         return false;
+    }
+
+    bool RadarRender::isAreaIntersectingClip(const RenderData &data, const RECT &clipRect) {
+        if (data.mCoordinates.size() < 3) {
+            return false;
+        }
+        std::vector<POINT> points;
+        points.reserve(data.mCoordinates.size());
+        for (const auto &coord : data.mCoordinates) {
+            POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
+            points.push_back(pt);
+        }
+        for (const auto &pt : points) {
+            if (pointInRect(pt, clipRect)) {
+                return true;
+            }
+        }
+        for (size_t i = 0, j = points.size() - 1; i < points.size(); j = i++) {
+            if (segmentIntersectsRect(points[j], points[i], clipRect)) {
+                return true;
+            }
+        }
+        POINT center = {(clipRect.left + clipRect.right) / 2, (clipRect.top + clipRect.bottom) / 2};
+        return pointInPolygon(center, points);
     }
 
     double RadarRender::getCurrentSpanDeg() {
