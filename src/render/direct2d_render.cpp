@@ -257,15 +257,40 @@ namespace RenderPlugin {
         const FLOAT contentWidth = measureMetrics.width;
         const FLOAT contentHeight = measureMetrics.height;
 
-        DWRITE_TEXT_ALIGNMENT alignment = DWRITE_TEXT_ALIGNMENT_LEADING;
+        DWRITE_TEXT_ALIGNMENT hAlign = DWRITE_TEXT_ALIGNMENT_LEADING;
+        DWRITE_PARAGRAPH_ALIGNMENT vAlign = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
         switch (data.mTextAnchor) {
+            case TextAnchor::TopLeft:
+            case TextAnchor::MidLeft:
+            case TextAnchor::BottomLeft:
+                hAlign = DWRITE_TEXT_ALIGNMENT_LEADING;
+                break;
+            case TextAnchor::TopCenter:
             case TextAnchor::Center:
-                alignment = DWRITE_TEXT_ALIGNMENT_CENTER;
+            case TextAnchor::BottomCenter:
+                hAlign = DWRITE_TEXT_ALIGNMENT_CENTER;
                 break;
             case TextAnchor::TopRight:
-                alignment = DWRITE_TEXT_ALIGNMENT_TRAILING;
+            case TextAnchor::MidRight:
+            case TextAnchor::BottomRight:
+                hAlign = DWRITE_TEXT_ALIGNMENT_TRAILING;
                 break;
-            default:
+        }
+        switch (data.mTextAnchor) {
+            case TextAnchor::TopLeft:
+            case TextAnchor::TopCenter:
+            case TextAnchor::TopRight:
+                vAlign = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
+                break;
+            case TextAnchor::MidLeft:
+            case TextAnchor::Center:
+            case TextAnchor::MidRight:
+                vAlign = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
+                break;
+            case TextAnchor::BottomLeft:
+            case TextAnchor::BottomCenter:
+            case TextAnchor::BottomRight:
+                vAlign = DWRITE_PARAGRAPH_ALIGNMENT_FAR;
                 break;
         }
 
@@ -282,8 +307,8 @@ namespace RenderPlugin {
         ))) {
             return;
         }
-        format->SetTextAlignment(alignment);
-        format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+        format->SetTextAlignment(hAlign);
+        format->SetParagraphAlignment(vAlign);
         format->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
         // 按实际内容尺寸创建绘制用 layout，保证定位正确
@@ -302,25 +327,43 @@ namespace RenderPlugin {
         }
 
         FLOAT originX = static_cast<FLOAT>(pt.x);
+        FLOAT originY = static_cast<FLOAT>(pt.y);
         switch (data.mTextAnchor) {
+            case TextAnchor::TopCenter:
             case TextAnchor::Center:
+            case TextAnchor::BottomCenter:
                 originX = static_cast<FLOAT>(pt.x) - contentWidth * 0.5f;
                 break;
             case TextAnchor::TopRight:
+            case TextAnchor::MidRight:
+            case TextAnchor::BottomRight:
                 originX = static_cast<FLOAT>(pt.x) - contentWidth;
                 break;
             default:
                 break;
         }
-        const D2D1_POINT_2F origin = D2D1::Point2F(originX, static_cast<FLOAT>(pt.y));
+        switch (data.mTextAnchor) {
+            case TextAnchor::MidLeft:
+            case TextAnchor::Center:
+            case TextAnchor::MidRight:
+                originY = static_cast<FLOAT>(pt.y) - contentHeight * 0.5f;
+                break;
+            case TextAnchor::BottomLeft:
+            case TextAnchor::BottomCenter:
+            case TextAnchor::BottomRight:
+                originY = static_cast<FLOAT>(pt.y) - contentHeight;
+                break;
+            default:
+                break;
+        }
+        const D2D1_POINT_2F origin = D2D1::Point2F(originX, originY);
 
-        // 可选：先绘制文字背景矩形（带少量内边距）及背景框描边
         constexpr FLOAT textBackgroundPadding = 2.0f;
         const D2D1_RECT_F bgRect = D2D1::RectF(
             originX - textBackgroundPadding,
-            static_cast<FLOAT>(pt.y),
+            originY - textBackgroundPadding,
             originX + contentWidth + textBackgroundPadding,
-            static_cast<FLOAT>(pt.y) + contentHeight + textBackgroundPadding
+            originY + contentHeight + textBackgroundPadding
         );
         if (!data.mRawTextBackground.empty()) {
             Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> bgBrush;

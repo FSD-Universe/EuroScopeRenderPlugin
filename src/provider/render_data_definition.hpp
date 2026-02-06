@@ -157,27 +157,41 @@ namespace RenderPlugin {
         return LineStyle::Solid;
     }
 
-    // 文字控制点：控制点对应文字框的左上角、水平居中还是右上角（垂直均为顶部）
+    // 文字控制点：左上、上中、右上、左中、中、右中、左下、下中、右下
     enum class TextAnchor {
         TopLeft,
+        TopCenter,
+        TopRight,
+        MidLeft,
         Center,
-        TopRight
+        MidRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight
     };
 
     constexpr auto TEXT_ANCHOR_TOP_LEFT = "topLeft";
-    constexpr auto TEXT_ANCHOR_CENTER = "center";
+    constexpr auto TEXT_ANCHOR_TOP_CENTER = "topCenter";
     constexpr auto TEXT_ANCHOR_TOP_RIGHT = "topRight";
+    constexpr auto TEXT_ANCHOR_MID_LEFT = "midLeft";
+    constexpr auto TEXT_ANCHOR_CENTER = "center";
+    constexpr auto TEXT_ANCHOR_MID_RIGHT = "midRight";
+    constexpr auto TEXT_ANCHOR_BOTTOM_LEFT = "bottomLeft";
+    constexpr auto TEXT_ANCHOR_BOTTOM_CENTER = "bottomCenter";
+    constexpr auto TEXT_ANCHOR_BOTTOM_RIGHT = "bottomRight";
 
     inline std::string textAnchorToString(TextAnchor anchor) {
         switch (anchor) {
-            case TextAnchor::TopLeft:
-                return TEXT_ANCHOR_TOP_LEFT;
-            case TextAnchor::Center:
-                return TEXT_ANCHOR_CENTER;
-            case TextAnchor::TopRight:
-                return TEXT_ANCHOR_TOP_RIGHT;
-            default:
-                return TEXT_ANCHOR_TOP_LEFT;
+            case TextAnchor::TopLeft: return TEXT_ANCHOR_TOP_LEFT;
+            case TextAnchor::TopCenter: return TEXT_ANCHOR_TOP_CENTER;
+            case TextAnchor::TopRight: return TEXT_ANCHOR_TOP_RIGHT;
+            case TextAnchor::MidLeft: return TEXT_ANCHOR_MID_LEFT;
+            case TextAnchor::Center: return TEXT_ANCHOR_CENTER;
+            case TextAnchor::MidRight: return TEXT_ANCHOR_MID_RIGHT;
+            case TextAnchor::BottomLeft: return TEXT_ANCHOR_BOTTOM_LEFT;
+            case TextAnchor::BottomCenter: return TEXT_ANCHOR_BOTTOM_CENTER;
+            case TextAnchor::BottomRight: return TEXT_ANCHOR_BOTTOM_RIGHT;
+            default: return TEXT_ANCHOR_TOP_LEFT;
         }
     }
 
@@ -188,8 +202,14 @@ namespace RenderPlugin {
         for (unsigned char c : str) {
             lower.push_back(static_cast<char>(std::tolower(c)));
         }
-        if (lower == TEXT_ANCHOR_CENTER) return TextAnchor::Center;
+        if (lower == TEXT_ANCHOR_TOP_CENTER) return TextAnchor::TopCenter;
         if (lower == TEXT_ANCHOR_TOP_RIGHT) return TextAnchor::TopRight;
+        if (lower == TEXT_ANCHOR_MID_LEFT) return TextAnchor::MidLeft;
+        if (lower == TEXT_ANCHOR_CENTER) return TextAnchor::Center;
+        if (lower == TEXT_ANCHOR_MID_RIGHT) return TextAnchor::MidRight;
+        if (lower == TEXT_ANCHOR_BOTTOM_LEFT) return TextAnchor::BottomLeft;
+        if (lower == TEXT_ANCHOR_BOTTOM_CENTER) return TextAnchor::BottomCenter;
+        if (lower == TEXT_ANCHOR_BOTTOM_RIGHT) return TextAnchor::BottomRight;
         return TextAnchor::TopLeft;
     }
 
@@ -202,13 +222,13 @@ namespace RenderPlugin {
         Color mColor{};
         std::wstring mText{}; // text content, supports multi-line with \n
         int mFontSize{}; // text font size
-        TextAnchor mTextAnchor{TextAnchor::TopLeft}; // text control point: topLeft | center | topRight
+        TextAnchor mTextAnchor{TextAnchor::TopLeft}; // 控制点: topLeft|topCenter|topRight|midLeft|center|midRight|bottomLeft|bottomCenter|bottomRight
         std::string mRawTextBackground{}; // text background color (name or #RRGGBB), empty = no background
         Color mTextBackground{}; // resolved text background color
         std::string mRawTextBackgroundStroke{}; // text background box border color, empty = no stroke
         Color mTextBackgroundStroke{}; // resolved text background stroke color
         float mTextBackgroundStrokeWidth{2.0f}; // text background box border width (px), default 2
-        int mZoom{}; // zoom level, when current zoom level is less than this value, the render data will be ignored
+        int mZoom{}; // zoom level 1-19, 当前 zoom 小于此值时不绘制；0 表示任意等级都绘制
         LineStyle mLineStyle{LineStyle::Solid}; // line style for LINE type (solid / dashed)
         float mStrokeWidth{0.0f};   // line/outline width, 0 = use default (1.0 solid, 2.0 dashed)
         float mDashLength{0.0f};   // dashed: dash segment length, 0 = use default (10.0)

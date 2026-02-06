@@ -90,41 +90,78 @@ namespace RenderPlugin {
         graphics.MeasureString(data.mText.c_str(), -1, &font, measureRect, &measureFormat, &boundingBox);
 
         StringAlignment hAlign = StringAlignmentNear;
+        StringAlignment vAlign = StringAlignmentNear;
         switch (data.mTextAnchor) {
+            case TextAnchor::TopCenter:
             case TextAnchor::Center:
+            case TextAnchor::BottomCenter:
                 hAlign = StringAlignmentCenter;
                 break;
             case TextAnchor::TopRight:
+            case TextAnchor::MidRight:
+            case TextAnchor::BottomRight:
                 hAlign = StringAlignmentFar;
+                break;
+            default:
+                break;
+        }
+        switch (data.mTextAnchor) {
+            case TextAnchor::MidLeft:
+            case TextAnchor::Center:
+            case TextAnchor::MidRight:
+                vAlign = StringAlignmentCenter;
+                break;
+            case TextAnchor::BottomLeft:
+            case TextAnchor::BottomCenter:
+            case TextAnchor::BottomRight:
+                vAlign = StringAlignmentFar;
                 break;
             default:
                 break;
         }
         StringFormat format(StringFormat::GenericDefault());
         format.SetAlignment(hAlign);
-        format.SetLineAlignment(StringAlignmentNear);
-        format.SetFormatFlags(format.GetFormatFlags() | StringFormatFlagsNoWrap); // 多行仅由 \n 换行
+        format.SetLineAlignment(vAlign);
+        format.SetFormatFlags(format.GetFormatFlags() | StringFormatFlagsNoWrap);
 
         float left = static_cast<float>(pt.x);
+        float top = static_cast<float>(pt.y);
         switch (data.mTextAnchor) {
+            case TextAnchor::TopCenter:
             case TextAnchor::Center:
+            case TextAnchor::BottomCenter:
                 left = static_cast<float>(pt.x) - boundingBox.Width * 0.5f;
                 break;
             case TextAnchor::TopRight:
+            case TextAnchor::MidRight:
+            case TextAnchor::BottomRight:
                 left = static_cast<float>(pt.x) - boundingBox.Width;
                 break;
             default:
                 break;
         }
-        const RectF drawRect(left, static_cast<float>(pt.y), boundingBox.Width, boundingBox.Height);
+        switch (data.mTextAnchor) {
+            case TextAnchor::MidLeft:
+            case TextAnchor::Center:
+            case TextAnchor::MidRight:
+                top = static_cast<float>(pt.y) - boundingBox.Height * 0.5f;
+                break;
+            case TextAnchor::BottomLeft:
+            case TextAnchor::BottomCenter:
+            case TextAnchor::BottomRight:
+                top = static_cast<float>(pt.y) - boundingBox.Height;
+                break;
+            default:
+                break;
+        }
+        const RectF drawRect(left, top, boundingBox.Width, boundingBox.Height);
 
-        // 可选：先绘制文字背景矩形（带少量内边距）及背景框描边
         constexpr float textBackgroundPadding = 2.0f;
         const RectF bgRect(
             left - textBackgroundPadding,
-            static_cast<float>(pt.y),
+            top - textBackgroundPadding,
             boundingBox.Width + textBackgroundPadding * 2.0f,
-            boundingBox.Height + textBackgroundPadding
+            boundingBox.Height + textBackgroundPadding * 2.0f
         );
         if (!data.mRawTextBackground.empty()) {
             SolidBrush bgBrush(data.mTextBackground.gdiColor);

@@ -69,7 +69,7 @@ namespace RenderPlugin {
     RadarRender::RadarRender(std::shared_ptr<Logger> logger, ProviderPtr dataProvider, RenderPtr render,
                              OnClosedCallback onClosed, int textSizeReferenceZoom)
             : mDataProvider(std::move(dataProvider)), mRender(std::move(render)), mLogger(std::move(logger)),
-              mOnClosedCallback(std::move(onClosed)), mTextSizeReferenceZoom(std::clamp(textSizeReferenceZoom, 1, 19)) {}
+              mOnClosedCallback(std::move(onClosed)), mTextSizeReferenceZoom((std::clamp)(textSizeReferenceZoom, 1, 19)) {}
 
     RadarRender::~RadarRender() = default;
 
@@ -131,16 +131,13 @@ namespace RenderPlugin {
         const double spanDeg = (std::max)(std::abs(spanLon), std::abs(spanLat));
 
         if (spanDeg <= std::numeric_limits<double>::epsilon()) {
-            // 极端情况下认为是最大缩放（19 级）
             return 19;
         }
 
-        // 将当前显示的经纬度跨度映射为标准地图缩放级别 1–19。
-        // 近似采用 Web 地图的定义：zoom ≈ log2(360 / spanDeg)，然后裁剪到 [1, 19]。
+        // 标准地图缩放 1–19：zoom ≈ log2(360 / spanDeg)
         const double rawZoom = std::log2(360.0 / spanDeg);
         int zoom = static_cast<int>(std::round(rawZoom));
-        zoom = std::clamp(zoom, 1, 19);
-        return zoom;
+        return (std::clamp)(zoom, 1, 19);
     }
 
     bool RadarRender::isAnyPointInClip(const RenderData &data, const RECT &clipRect) {
@@ -223,7 +220,7 @@ namespace RenderPlugin {
         mRender->drawArea(hDC, points, data);
     }
 
-    void RadarRender::drawText(HDC hDC, const RenderData &data, double spanDeg) {
+    void RadarRender::drawText(HDC hDC, const RenderData &data, double /* spanDeg */) {
         if (data.mCoordinates.empty() || data.mText.empty()) {
             return;
         }
@@ -231,13 +228,8 @@ namespace RenderPlugin {
         const auto &coord = data.mCoordinates[0];
         POINT pt = ConvertCoordFromPositionToPixel(coord.toPosition());
 
-        // 用连续的比例（视野跨度）缩放字体，避免按整数 zoom 时字体跳变
-        // 参考 zoom 由设置 TextSizeReferenceZoom 决定，该 zoom 下 size 即参考像素
-        const double referenceSpanDeg = 360.0 / std::pow(2.0, mTextSizeReferenceZoom);
-        const float baseSize = data.mFontSize > 0 ? static_cast<float>(data.mFontSize) : 12.0f;
-        const float scaleFactor = static_cast<float>(referenceSpanDeg / spanDeg);
-        const float effectiveFontSize = baseSize * scaleFactor;
-
+        // 文字大小固定为配置的 size（像素），不随视野缩放
+        const float effectiveFontSize = data.mFontSize > 0 ? static_cast<float>(data.mFontSize) : 12.0f;
         mRender->drawText(hDC, pt, data, effectiveFontSize);
     }
 
